@@ -388,18 +388,47 @@ button { font: inherit; }
 }
 .hist-texto-col { max-width: 56ch; }
 .hist-chapter {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(260px, 47%) 1fr;
   gap: clamp(28px, 5vw, 64px);
   align-items: center;
   margin-bottom: clamp(64px, 11svh, 130px);
 }
+/* separador entre capítulos: un fleurón chico centrado en el espacio entre
+   uno y el siguiente -- la Historia ya se numera como capítulos (01/02/03),
+   esto lo hace visible como una pausa real, no solo un margen */
+.hist-chapter:not(:last-child)::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(-1 * clamp(32px, 5.5svh, 65px));
+  transform: translateX(-50%);
+  width: 64px;
+  height: 1px;
+  background: rgba(224, 164, 95, 0.3);
+}
+.hist-chapter:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: calc(-1 * clamp(32px, 5.5svh, 65px) - 3px);
+  transform: translateX(-50%) rotate(45deg);
+  width: 7px;
+  height: 7px;
+  background: #0d0b0a;
+  border: 1px solid #c47b3e;
+}
 .hist-chapter--reverse { grid-template-columns: 1fr minmax(260px, 47%); }
 .hist-chapter--reverse .hist-photo { order: 2; }
 .hist-chapter--reverse .hist-texto-col { margin-left: auto; }
 @media (max-width: 720px) {
   .hist-chapter, .hist-chapter--reverse { grid-template-columns: 1fr; }
-  .hist-chapter--reverse .hist-photo { order: 0; }
+  /* en mobile no hay dos columnas que alternar -- el texto va siempre
+     primero (contexto antes que imagen) y la foto después, en las dos
+     variantes de capítulo por igual */
+  .hist-chapter .hist-photo, .hist-chapter--reverse .hist-photo { order: 1; }
+  .hist-chapter .hist-texto-col, .hist-chapter--reverse .hist-texto-col { order: 0; margin-left: 0; }
   .hist-texto-col { max-width: none; }
 }
 .hist-chapter, .hist-chapter--reverse { perspective: 1000px; }
@@ -457,7 +486,8 @@ button { font: inherit; }
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Fraunces', serif;
+  /* mismo lenguaje mono que numera el resto del sitio (paso 01 · de 05,
+     galería 01/14) -- antes usaba Fraunces, quedaba suelto del sistema */
   font-size: 0.7rem;
   color: #e0a45f;
 }
