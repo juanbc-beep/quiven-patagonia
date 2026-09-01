@@ -80,14 +80,16 @@ let DESCENSO = [
   { p: 0.00, e: 'SOBREVUELO · PATAGONIA', t: 'Un plato empieza mucho antes de la cocina', x: 'Deslizá para descender. El viaje termina en una casa sobre el Nahuel Huapi.', km: '2 400' },
   { p: 0.26, e: 'CORDILLERA · CONO SUR', t: 'Hay un punto donde la cordillera toca el agua', x: 'Cuarenta y un grados al sur. Ahí abajo empieza el territorio que escribe la carta.', km: '640' },
   { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'Un lago de deshielo, ochenta kilómetros de costa', x: 'Bosque de coihue, ladera con hongos, agua dulce. Todo lo que se sirve viene de este radio.', km: '95' },
-  { p: 0.78, e: 'AV. BUSTILLO 19688 · PLANTA ALTA', t: 'Quiven Patagonia House Kitchen', x: 'Una casa sobre el lago. Adentro, cinco pasos y una cocina a la vista. Llegaste.', km: '0' }
+  { p: 0.60, e: 'CAMINO DE LA COSTA', t: 'Cada curva del camino, más cerca del agua', x: 'Puentes de madera, arroyos color turquesa. Los últimos minutos antes de llegar.', km: '20' },
+  { p: 0.80, e: 'AV. BUSTILLO 19688 · PLANTA ALTA', t: 'Quiven Patagonia House Kitchen', x: 'Una casa sobre el lago. Adentro, cinco pasos y una cocina a la vista. Llegaste.', km: '0' }
 ];
 const DESCENSO_ES = DESCENSO;
 const DESCENSO_EN = [
   { p: 0.00, e: 'FLYOVER · PATAGONIA', t: 'A dish begins long before the kitchen', x: 'Scroll to descend. The journey ends in a house on the Nahuel Huapi.', km: '2,400' },
   { p: 0.26, e: 'MOUNTAINS · SOUTHERN CONE', t: 'There’s a point where the mountains meet the water', x: 'Forty-one degrees south. Down there begins the territory that writes the menu.', km: '640' },
   { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'A glacial lake, fifty miles of coastline', x: 'Coihue forest, hillside mushrooms, fresh water. Everything served comes from this radius.', km: '95' },
-  { p: 0.78, e: 'AV. BUSTILLO 19688 · UPPER FLOOR', t: 'Quiven Patagonia House Kitchen', x: 'A house on the lake. Inside, five courses and an open kitchen. You’ve arrived.', km: '0' }
+  { p: 0.60, e: 'THE COASTAL ROAD', t: 'Every bend in the road, closer to the water', x: 'Wooden bridges, turquoise streams. The last few minutes before arriving.', km: '20' },
+  { p: 0.80, e: 'AV. BUSTILLO 19688 · UPPER FLOOR', t: 'Quiven Patagonia House Kitchen', x: 'A house on the lake. Inside, five courses and an open kitchen. You’ve arrived.', km: '0' }
 ];
 
 /* etiquetas visibles de cada capítulo (data-cap es un identificador interno,
@@ -596,9 +598,10 @@ const App = {
         atmosfera: q('[data-role="d-atmosfera"]'),
         flash: q('[data-role="d-flash"]'),
         capas: [
-          [q('[data-role="d-1"]'), 0.16, 0.46, 1.3, 0.4, 0.4],
-          [q('[data-role="d-2"]'), 0.42, 0.72, 1.24, 0.34, 0.4],
-          [q('[data-role="d-3"]'), 0.68, 1.02, 1.16, 0.22, 0.24]
+          [q('[data-role="d-1"]'), 0.16, 0.38, 1.3, 0.4, 0.4],
+          [q('[data-role="d-2"]'), 0.34, 0.56, 1.24, 0.34, 0.4],
+          [q('[data-role="d-3"]'), 0.52, 0.74, 1.2, 0.3, 0.35],
+          [q('[data-role="d-4"]'), 0.70, 1.02, 1.16, 0.22, 0.24]
         ],
         etiqueta: q('[data-role="d-etiqueta"]'),
         titulo: q('[data-role="d-titulo"]'),
