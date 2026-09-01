@@ -407,9 +407,9 @@ button { font: inherit; }
   bottom: calc(-1 * clamp(32px, 5.5svh, 65px));
   transform: translateX(-50%) scaleX(0);
   transform-origin: center;
-  width: 64px;
-  height: 1px;
-  background: rgba(224, 164, 95, 0.3);
+  width: 84px;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, rgba(224, 164, 95, 0.55) 12%, rgba(224, 164, 95, 0.55) 88%, transparent);
   transition: transform 0.9s cubic-bezier(.16, 1, .3, 1) 0.15s;
 }
 .hist-chapter.is-in:not(:last-child)::before {
@@ -419,12 +419,12 @@ button { font: inherit; }
   content: '';
   position: absolute;
   left: 50%;
-  bottom: calc(-1 * clamp(32px, 5.5svh, 65px) - 3px);
+  bottom: calc(-1 * clamp(32px, 5.5svh, 65px) - 4.5px);
   transform: translateX(-50%) rotate(45deg) scale(0);
-  width: 7px;
-  height: 7px;
-  background: #0d0b0a;
-  border: 1px solid #c47b3e;
+  width: 11px;
+  height: 11px;
+  background: #e0a45f;
+  box-shadow: 0 0 10px 2px rgba(224, 164, 95, 0.6);
   transition: transform 0.5s cubic-bezier(.16, 1, .3, 1) 0.5s;
 }
 .hist-chapter.is-in:not(:last-child)::after {
@@ -432,8 +432,8 @@ button { font: inherit; }
   animation: histFleuronPulso 3.2s ease-in-out 1.4s infinite;
 }
 @keyframes histFleuronPulso {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 123, 62, 0); }
-  50% { box-shadow: 0 0 8px 2px rgba(196, 123, 62, 0.45); }
+  0%, 100% { box-shadow: 0 0 10px 2px rgba(224, 164, 95, 0.6); }
+  50% { box-shadow: 0 0 18px 4px rgba(224, 164, 95, 0.95); }
 }
 @media (prefers-reduced-motion: reduce) {
   .hist-chapter:not(:last-child)::before { transition: none; transform: translateX(-50%) scaleX(1); }
@@ -776,6 +776,15 @@ button { font: inherit; }
   pointer-events: none;
 }
 .galeria-topbar > * { pointer-events: auto; }
+.galeria-titulo-caja { display: flex; align-items: center; gap: 10px; }
+/* sello de marca junto al título -- reforzar identidad en el chrome de la
+   interfaz, no sobre las fotos: la comida tiene que seguir siendo la
+   protagonista, no compartir cartel con el logo */
+.galeria-sello {
+  width: clamp(18px, 2.6vw, 24px);
+  height: clamp(18px, 2.6vw, 24px);
+  opacity: 0.8;
+}
 .galeria-titulo {
   font-size: clamp(0.68rem, 1.8vw, 0.8rem);
   letter-spacing: 0.1em;
@@ -852,9 +861,10 @@ button { font: inherit; }
    (línea + rombo), acá en movimiento en vez de estático */
 .galeria-costura {
   position: absolute;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(224, 164, 95, 0.9) 15%, rgba(224, 164, 95, 0.9) 85%, transparent);
-  box-shadow: 0 0 6px rgba(224, 164, 95, 0.5);
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 164, 95, 0.95) 12%, rgba(242, 200, 140, 1) 50%, rgba(224, 164, 95, 0.95) 88%, transparent);
+  box-shadow: 0 0 14px rgba(224, 164, 95, 0.7), 0 0 30px rgba(196, 123, 62, 0.35);
   opacity: 0;
   pointer-events: none;
   z-index: 3;
@@ -865,10 +875,10 @@ button { font: inherit; }
   position: absolute;
   top: 50%;
   left: 50%;
-  width: 7px;
-  height: 7px;
-  background: #0d0b0a;
-  border: 1px solid #e0a45f;
+  width: 11px;
+  height: 11px;
+  background: #e0a45f;
+  box-shadow: 0 0 10px 2px rgba(224, 164, 95, 0.8);
   transform: translate(-50%, -50%) rotate(45deg);
 }
 @media (prefers-reduced-motion: reduce) {
