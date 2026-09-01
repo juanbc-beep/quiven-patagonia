@@ -841,17 +841,28 @@ button { font: inherit; }
   will-change: opacity, clip-path, transform;
   transition: transform 0.4s cubic-bezier(.16, 1, .3, 1);
 }
-.galeria-item img {
+.galeria-item-frame {
   /* las 14 fotos miden todas lo mismo -- 2:3, la relación que ya tenía la
      mayoría; las pocas que no, se recortaron aparte para la galería (ver
-     galeria-810/e4134/825.webp). Nada de "cada una a su propio tamaño". */
+     galeria-810/e4134/825.webp). Nada de "cada una a su propio tamaño".
+     El clip-path del wipe va acá, no en .galeria-item: este marco tiene
+     el mismo tamaño exacto que la foto (sin el padding de pantalla
+     completa de .galeria-item), así el corte coincide con el borde
+     visible de la foto en TODO el recorrido del wipe, no solo a la mitad. */
+  position: relative;
   width: auto;
   height: 68svh;
   aspect-ratio: 2 / 3;
   max-width: 78vw;
-  object-fit: cover;
   border-radius: 2px;
+  overflow: hidden;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
+}
+.galeria-item img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   /* mismo preset del carrusel de El Menú de Pasos -- coherencia visual entre
      las fotos "de vidriera" del sitio, no cada una con su propio tratamiento */
   filter: saturate(1.05) contrast(1.03);
@@ -899,6 +910,6 @@ button { font: inherit; }
   .galeria-item { transition: opacity 0.3s ease; }
 }
 @media (max-width: 700px) {
-  .galeria-item img { max-width: 88vw; max-height: 58svh; }
+  .galeria-item-frame { max-width: 88vw; max-height: 58svh; }
   .galeria-hint { display: none; }
 }

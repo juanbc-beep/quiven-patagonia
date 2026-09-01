@@ -79,16 +79,16 @@ const CITAS_EN = [
 let DESCENSO = [
   { p: 0.00, e: 'SOBREVUELO · PATAGONIA', t: 'Un plato empieza mucho antes de la cocina', x: 'Deslizá para descender. El viaje termina en una casa sobre el Nahuel Huapi.', km: '2 400' },
   { p: 0.26, e: 'CORDILLERA · CONO SUR', t: 'Hay un punto donde la cordillera toca el agua', x: 'Cuarenta y un grados al sur. Ahí abajo empieza el territorio que escribe la carta.', km: '640' },
-  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'Un lago de deshielo, ochenta kilómetros de costa', x: 'Bosque de coihue, ladera con hongos, agua dulce. Todo lo que se sirve viene de este radio.', km: '95' },
-  { p: 0.60, e: 'CAMINO DE LA COSTA', t: 'Cada curva del camino, más cerca del agua', x: 'Puentes de madera, arroyos color turquesa. Los últimos minutos antes de llegar.', km: '20' },
+  { p: 0.46, e: 'CAMINO DE LA COSTA', t: 'Cada curva del camino, más cerca del agua', x: 'Puentes de madera, arroyos color turquesa. Los últimos minutos antes de llegar.', km: '60' },
+  { p: 0.62, e: 'LA CASA · SOBRE EL LAGO', t: 'La casa aparece entre los árboles', x: 'Un salón con vista al Nahuel Huapi, la mesa ya tendida. Quedan los últimos metros.', km: '15' },
   { p: 0.80, e: 'AV. BUSTILLO 19688 · PLANTA ALTA', t: 'Quiven Patagonia House Kitchen', x: 'Una casa sobre el lago. Adentro, cinco pasos y una cocina a la vista. Llegaste.', km: '0' }
 ];
 const DESCENSO_ES = DESCENSO;
 const DESCENSO_EN = [
   { p: 0.00, e: 'FLYOVER · PATAGONIA', t: 'A dish begins long before the kitchen', x: 'Scroll to descend. The journey ends in a house on the Nahuel Huapi.', km: '2,400' },
   { p: 0.26, e: 'MOUNTAINS · SOUTHERN CONE', t: 'There’s a point where the mountains meet the water', x: 'Forty-one degrees south. Down there begins the territory that writes the menu.', km: '640' },
-  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'A glacial lake, fifty miles of coastline', x: 'Coihue forest, hillside mushrooms, fresh water. Everything served comes from this radius.', km: '95' },
-  { p: 0.60, e: 'THE COASTAL ROAD', t: 'Every bend in the road, closer to the water', x: 'Wooden bridges, turquoise streams. The last few minutes before arriving.', km: '20' },
+  { p: 0.46, e: 'THE COASTAL ROAD', t: 'Every bend in the road, closer to the water', x: 'Wooden bridges, turquoise streams. The last few minutes before arriving.', km: '60' },
+  { p: 0.62, e: 'THE HOUSE · ON THE LAKE', t: 'The house appears between the trees', x: 'A dining room facing the Nahuel Huapi, the table already set. A few steps left.', km: '15' },
   { p: 0.80, e: 'AV. BUSTILLO 19688 · UPPER FLOOR', t: 'Quiven Patagonia House Kitchen', x: 'A house on the lake. Inside, five courses and an open kitchen. You’ve arrived.', km: '0' }
 ];
 
@@ -1311,6 +1311,12 @@ const App = {
     const items = all('[data-role="galeria-item"]');
     if (!items.length) return;
     const n = items.length;
+    // el clip-path del wipe va sobre este marco (mismo tamaño que la foto),
+    // no sobre .galeria-item (pantalla completa, con padding): si se recorta
+    // el contenedor grande, el % del clip-path no corresponde 1:1 con la
+    // altura real de la foto y la costura se desalinea del corte -- ver
+    // nota más abajo, junto a pintarGaleria.
+    const frames = items.map(it => it.querySelector('.galeria-item-frame'));
     let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
@@ -1331,6 +1337,16 @@ const App = {
     // eso cambia en vivo cuánto vale 68svh -- con una medida cacheada la
     // costura se iba desalineando del corte real a medida que se scrolleaba
     // más adentro de la galería, cada vez peor.
+    //
+    // además del cacheo, había un segundo bug (el de fondo): el clip-path
+    // del wipe se aplicaba sobre .galeria-item, que ocupa TODA la pantalla
+    // (100svh, con padding); la costura en cambio se calculaba con el alto
+    // de la <img> (68svh). Como son cajas de referencia distintas, el % del
+    // clip-path no correspondía con la posición de la costura -- coincidían
+    // solo cerca de la mitad del recorrido por casualidad geométrica, y se
+    // separaban hacia los extremos. Ahora el clip-path va sobre
+    // .galeria-item-frame, que tiene el mismo tamaño exacto que la foto, así
+    // "% de la caja recortada" y "% de la foto revelada" son la misma cosa.
 
     /* cada foto queda quieta la primera mitad de su tramo; en la segunda
        mitad una cortina sube desde abajo y recién ahí aparece la siguiente
@@ -1351,9 +1367,10 @@ const App = {
         ? 'rotateX(' + tiltRX + 'deg) rotateY(' + tiltRY + 'deg) scale(1.015)'
         : 'scale(1)';
       items.forEach((it, n2) => {
+        const fr = frames[n2];
         if (n2 === i) {
           it.style.opacity = '1';
-          it.style.clipPath = 'inset(0 0 0 0)';
+          if (fr) fr.style.clipPath = 'inset(0 0 0 0)';
           it.style.transform = transformCapa(n2);
           it.style.zIndex = '1';
           it.style.pointerEvents = idx === i ? 'auto' : 'none';
@@ -1362,7 +1379,7 @@ const App = {
           // se revela de arriba hacia abajo, en el mismo sentido del scroll --
           // z-index explícito: el orden del DOM no alcanza para garantizar
           // que esta capa quede arriba de la que se está por tapar
-          it.style.clipPath = 'inset(0 0 ' + ((1 - wipe) * 100) + '% 0)';
+          if (fr) fr.style.clipPath = 'inset(0 0 ' + ((1 - wipe) * 100) + '% 0)';
           it.style.transform = transformCapa(n2);
           it.style.zIndex = '2';
           it.style.pointerEvents = idx === i + 1 ? 'auto' : 'none';
@@ -1382,8 +1399,11 @@ const App = {
         const mostrar = haySiguiente && wipe > 0 && wipe < 1;
         costura.style.opacity = mostrar ? '1' : '0';
         if (mostrar && sticky) {
-          const imgEl = items[i + 1].querySelector('img');
-          const r = imgEl.getBoundingClientRect();
+          // misma caja que usa el clip-path (.galeria-item-frame): "wipe *
+          // altura de esta caja" da exactamente el borde del corte, sin
+          // conversión entre cajas de referencia distintas.
+          const fr = frames[i + 1];
+          const r = fr.getBoundingClientRect();
           const s = sticky.getBoundingClientRect();
           costura.style.top = (r.top - s.top + wipe * r.height) + 'px';
           costura.style.left = (r.left - s.left) + 'px';
