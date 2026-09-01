@@ -1,0 +1,813 @@
+/* Quiven Patagonia House Kitchen — estilos base */
+
+/* fuentes auto-hospedadas (ver index.html) -- subset latin, cubre español e inglés */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 200 400;
+  font-display: swap;
+  src: url('../assets/fonts/fraunces-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Fraunces';
+  font-style: italic;
+  font-weight: 300;
+  font-display: swap;
+  src: url('../assets/fonts/fraunces-italic-300.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Manrope';
+  font-style: normal;
+  font-weight: 300 500;
+  font-display: swap;
+  src: url('../assets/fonts/manrope-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('../assets/fonts/plexmono-400.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('../assets/fonts/plexmono-500.woff2') format('woff2');
+}
+
+/* invisible hasta que alguien navega con teclado -- primer link de la página,
+   deja saltar el nav fijo e ir directo al contenido real */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 12px;
+  z-index: 999;
+  background: #e0a45f;
+  color: #0d0b0a;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 500;
+  font-size: 0.85rem;
+  padding: 12px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 12px;
+}
+
+/* ---------- logo con vida: el sello circular gira despacio, el nombre
+   se queda quieto y legible -- es el único elemento visible en todo momento
+   del sitio, vale la pena que respire un poco ---------- */
+.qv-logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.qv-logo img { height: 100%; width: auto; display: block; }
+.qv-logo-circulo {
+  animation: qvLogoGiro 46s linear infinite;
+  transform-origin: 50% 50%;
+}
+@keyframes qvLogoGiro {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qv-logo-circulo { animation: none; }
+}
+
+body {
+  margin: 0;
+  background: #05060a;
+  color: #cbbca9;
+  font-family: 'Manrope', sans-serif;
+  font-weight: 300;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+* { box-sizing: border-box; }
+img { display: block; max-width: 100%; }
+
+/* ---------- scrollbar propio: el gris default del navegador desentona con
+   una página que cuida cada otro detalle visual ---------- */
+html {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(224, 164, 95, 0.45) rgba(13, 11, 10, 0.4);
+}
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: rgba(13, 11, 10, 0.4); }
+::-webkit-scrollbar-thumb {
+  background: rgba(224, 164, 95, 0.4);
+  border-radius: 999px;
+  border: 2px solid rgba(13, 11, 10, 0.4);
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(224, 164, 95, 0.65); background-clip: padding-box; }
+
+/* ---------- foco de teclado propio: el azul default del navegador no
+   combina con el tema oscuro y es difícil de ver contra fondos oscuros ---------- */
+:focus-visible {
+  outline: 2px solid #e0a45f;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+a { color: #f2ece1; text-decoration: none; }
+a:hover { color: #e0a45f; }
+::selection { background: #c47b3e; color: #0d0b0a; }
+button { font: inherit; }
+
+@keyframes qvChar { from { opacity: 0; transform: translateY(0.55em) rotate(3deg); } to { opacity: 1; transform: none; } }
+@keyframes qvSpin { to { transform: rotate(360deg); } }
+@keyframes qvSpinBack { to { transform: rotate(-360deg); } }
+@keyframes qvPulso { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes qvOnda { 0% { transform: scale(0.62); opacity: 0.55; } 100% { transform: scale(1.85); opacity: 0; } }
+@keyframes qvBrasa { 0%, 100% { box-shadow: 0 0 9px 2px rgba(224, 164, 95, 0.5); } 50% { box-shadow: 0 0 19px 5px rgba(224, 164, 95, 0.85); } }
+@keyframes qvFlota { 0%, 100% { transform: rotate(45deg) translate(0, 0); } 50% { transform: rotate(45deg) translate(4px, 4px); } }
+@keyframes qvLatido { 0%, 100% { opacity: 0.35; } 50% { opacity: 1; } }
+
+/* ---------- interactive hover states (design intent from the prototype) ---------- */
+.btn-continuar {
+  transition: border-color .4s ease, background-color .4s ease, letter-spacing .4s ease, transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
+}
+.btn-continuar:hover {
+  border-color: #e0a45f;
+  background-color: rgba(196, 123, 62, 0.3);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
+}
+.btn-reservar-mesa {
+  transition: background .3s ease, transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
+}
+.btn-reservar-mesa:hover {
+  background: #e0a45f;
+  transform: translateY(-3px);
+  box-shadow: 0 14px 32px rgba(196, 123, 62, 0.35);
+}
+.nav-cta {
+  transition: border-color .3s ease, background-color .3s ease, transform .3s cubic-bezier(.16,1,.3,1);
+}
+.nav-cta:hover {
+  border-color: #e0a45f;
+  background-color: rgba(196, 123, 62, 0.16);
+  transform: translateY(-2px);
+}
+@media (prefers-reduced-motion: reduce) {
+  .btn-continuar, .btn-reservar-mesa, .nav-cta { transition: none; }
+  .btn-continuar:hover, .btn-reservar-mesa:hover, .nav-cta:hover { transform: none; }
+}
+.btn-whatsapp {
+  transition: border-color .3s ease;
+}
+.btn-whatsapp:hover {
+  border-color: #f2ece1;
+}
+
+/* ---------- small-caps editorial: reemplaza al mayúsculas plano en los kickers
+   principales -- el texto fuente pasa a mixed-case, esto solo da estilo ---------- */
+.qv-caps { font-variant-caps: small-caps; }
+
+/* ---------- lecturas de instrumento: mono, no serif -- coordenadas, pasos, reloj ---------- */
+.qv-mono {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- 04 el plato: fotografía real con profundidad táctil, sin geometría 3D falsa ---------- */
+.plato-zona {
+  cursor: grab;
+  touch-action: pan-y;
+}
+.plato-zona:active { cursor: grabbing; }
+.plato-motas {
+  position: absolute;
+  inset: -18%;
+  width: 136%;
+  height: 136%;
+  pointer-events: none;
+  z-index: 2;
+}
+.plato-stage {
+  position: absolute;
+  inset: 6%;
+  perspective: 1000px;
+  z-index: 1;
+}
+.plato-tilt {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  overflow: hidden;
+  transform-style: preserve-3d;
+  box-shadow: 0 40px 110px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(224, 164, 95, 0.28), inset 0 0 40px rgba(0, 0, 0, 0.35);
+  transition: transform .6s cubic-bezier(.16, 1, .3, 1);
+  will-change: transform;
+}
+.plato-photo-wrap { position: absolute; inset: 0; }
+.plato-photo-wrap img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.14);
+  filter: saturate(1.05) contrast(1.03);
+  clip-path: circle(0% at 50% 50%);
+  /* el navegador arranca su propio "arrastrar imagen" nativo apenas el mouse
+     se mueve sobre un <img> -- eso disparaba un pointercancel que mataba el
+     drag para cambiar de paso a mitad de camino, solo con mouse (no en
+     touch). draggable="false" en el HTML + esto lo sacan del todo. */
+  -webkit-user-drag: none;
+  user-drag: none;
+  user-select: none;
+  transition: opacity 1s cubic-bezier(.16, 1, .3, 1), transform 1.6s cubic-bezier(.16, 1, .3, 1), clip-path 1.1s cubic-bezier(.16, 1, .3, 1);
+}
+.plato-photo-wrap img.is-active {
+  opacity: 1;
+  transform: scale(1);
+  clip-path: circle(75% at 50% 50%);
+}
+.plato-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  background: radial-gradient(220px circle at var(--sx, 50%) var(--sy, 50%), rgba(255, 232, 204, 0.5), transparent 62%);
+  transition: opacity .5s ease;
+}
+.plato-zona:hover .plato-sheen { opacity: 1; }
+
+.terr-hint {
+  position: absolute;
+  bottom: -8%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.44rem, 1.4vw, 0.56rem);
+  letter-spacing: 0.2em;
+  color: #8d7f70;
+  white-space: nowrap;
+  text-align: center;
+  display: none;
+}
+@media (hover: hover) and (pointer: fine) {
+  .terr-hint { display: block; }
+}
+.plato-hint {
+  position: absolute;
+  bottom: -6%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: clamp(0.44rem, 1.4vw, 0.58rem);
+  letter-spacing: 0.2em;
+  color: #8d7f70;
+  white-space: nowrap;
+  text-align: center;
+}
+@media (prefers-reduced-motion: reduce) {
+  .plato-tilt { transition: none; }
+}
+
+.chip-dieta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.6875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8d7f70;
+  border: 1px dashed rgba(141, 127, 112, 0.5);
+  padding: 7px 11px;
+  border-radius: 999px;
+}
+.chip-dieta svg { flex: 0 0 auto; color: #c47b3e; }
+
+.footer-social {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #8d7f70;
+  transition: color .3s ease;
+}
+.footer-social svg { flex: 0 0 auto; }
+.footer-social:hover { color: #e0a45f; }
+.menu-nota-dieta {
+  display: block;
+  margin-top: clamp(10px, 2svh, 16px);
+  font-size: clamp(0.7rem, 1.9vw, 0.78rem);
+  line-height: 1.6;
+  color: #8d7f70;
+  max-width: 44ch;
+}
+.menu-nota-dieta a { color: #e0a45f; }
+
+/* ---------- 05 historia: capítulos secuenciales, no un bloque estático ---------- */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(28px);
+  transition: opacity .9s cubic-bezier(.16, 1, .3, 1), transform .9s cubic-bezier(.16, 1, .3, 1);
+}
+[data-reveal].is-in {
+  opacity: 1;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal] { opacity: 1; transform: none; transition: none; }
+}
+
+/* ---------- foto de fondo del descenso: brillo real + sway sutil en el follaje + zoom lento ---------- */
+.d-fondo-img {
+  filter: url(#qv-sway) brightness(0.86) saturate(1.1) blur(0.3px);
+  transform-origin: 54% 46%;
+  animation: qvFondoZoom 55s cubic-bezier(.3, 0, .4, 1) forwards;
+  will-change: transform;
+}
+@keyframes qvFondoZoom {
+  from { transform: scale(1); }
+  to { transform: scale(1.1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .d-fondo-img { filter: brightness(0.86) saturate(1.1) blur(0.3px); animation: none; }
+}
+/* filtro SVG animado (feTurbulence+feDisplacementMap) es caro de componer en
+   GPUs de gama baja -- ahí se saca y queda solo brillo/saturación fijos */
+html.gama-baja .d-fondo-img { filter: brightness(0.86) saturate(1.1) blur(0.3px); }
+
+/* ---------- variantes de reveal por sección: no todo se forma igual ---------- */
+/* el clip-path va en un wrapper interno, no en el elemento observado: si el
+   propio target queda con área renderizada 0 (clip total), Chromium nunca
+   reporta intersección y el reveal no dispara jamás -- bug real, no cosmético. */
+[data-reveal="clip"] .clip-inner {
+  display: inline-block;
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 1.1s cubic-bezier(.16, 1, .3, 1);
+}
+[data-reveal="clip"].is-in .clip-inner { clip-path: inset(0 0 0 0); }
+
+[data-reveal="blur"] {
+  opacity: 0;
+  transform: scale(0.96);
+  filter: blur(7px);
+  transition: opacity 1s ease, transform 1s cubic-bezier(.16, 1, .3, 1), filter 1s ease;
+}
+[data-reveal="blur"].is-in { opacity: 1; transform: none; filter: blur(0); }
+
+@media (prefers-reduced-motion: reduce) {
+  [data-reveal="clip"] { clip-path: inset(0 0 0 0); transition: none; }
+  [data-reveal="blur"] { opacity: 1; transform: none; filter: blur(0); transition: none; }
+}
+
+/* letra a letra: se usa en el kicker de "La Experiencia" para cerrar el
+   recorrido con un ritmo distinto al resto */
+[data-letras] .letra {
+  display: inline-block;
+  opacity: 0;
+}
+[data-letras].is-in .letra {
+  animation: qvChar .6s cubic-bezier(.16, 1, .3, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  [data-letras] .letra { opacity: 1; animation: none; }
+}
+
+/* en pantallas anchas el contenedor crece y las fotos sangran hacia los
+   márgenes (estilo editorial); el texto se queda en un ancho legible */
+.hist-wrap {
+  position: relative;
+  max-width: clamp(1160px, 90vw, 1680px);
+  margin: 0 auto;
+}
+.hist-texto-col { max-width: 56ch; }
+.hist-chapter {
+  display: grid;
+  grid-template-columns: minmax(260px, 47%) 1fr;
+  gap: clamp(28px, 5vw, 64px);
+  align-items: center;
+  margin-bottom: clamp(64px, 11svh, 130px);
+}
+.hist-chapter--reverse { grid-template-columns: 1fr minmax(260px, 47%); }
+.hist-chapter--reverse .hist-photo { order: 2; }
+.hist-chapter--reverse .hist-texto-col { margin-left: auto; }
+@media (max-width: 720px) {
+  .hist-chapter, .hist-chapter--reverse { grid-template-columns: 1fr; }
+  .hist-chapter--reverse .hist-photo { order: 0; }
+  .hist-texto-col { max-width: none; }
+}
+.hist-chapter, .hist-chapter--reverse { perspective: 1000px; }
+.hist-photo {
+  position: relative;
+  margin: 0;
+  aspect-ratio: 3 / 4;
+  overflow: hidden;
+  background: #16110e;
+  border: 1px solid rgba(242, 236, 225, 0.12);
+  border-radius: 2px;
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.45);
+  transform: rotate(var(--tilt, 0deg)) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .5s cubic-bezier(.16, 1, .3, 1);
+  will-change: transform;
+}
+.hist-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.02);
+  transition: transform .6s ease;
+}
+.hist-photo:hover img { transform: scale(1.06); }
+.hist-sheen {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  opacity: 0;
+  background: radial-gradient(180px circle at var(--sx, 50%) var(--sy, 50%), rgba(255, 232, 204, 0.45), transparent 62%);
+  transition: opacity .5s ease;
+}
+.hist-photo:hover .hist-sheen { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .hist-photo { transition: none; }
+}
+[data-role="servicio-tilt"] {
+  transform: rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg)) scale(var(--sc, 1));
+}
+[data-role="servicio-tilt"]:hover .hist-sheen { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  [data-role="servicio-tilt"] { transition: none; }
+}
+.hist-seal {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid rgba(224, 164, 95, 0.6);
+  background: rgba(13, 11, 10, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Fraunces', serif;
+  font-size: 0.7rem;
+  color: #e0a45f;
+}
+/* ---------- placa de presentación del chef: nombre y rol, sin ambigüedad ---------- */
+.hist-chef-placa {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+  margin-bottom: clamp(14px, 2.4svh, 22px);
+  padding-bottom: clamp(12px, 2svh, 18px);
+  border-bottom: 1px solid rgba(224, 164, 95, 0.25);
+}
+.hist-chef-nombre {
+  font-family: 'Fraunces', serif;
+  font-weight: 400;
+  font-size: clamp(1.5rem, 3vw + 1svh, 2.1rem);
+  color: #f2ece1;
+  line-height: 1;
+}
+.hist-chef-rol {
+  font-size: clamp(0.6rem, 1.6vw, 0.68rem);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #e0a45f;
+}
+
+.hist-quote {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.1rem, 2.6vw, 1.7rem);
+  line-height: 1.5;
+  color: #f2ece1;
+  margin: 0;
+}
+.hist-quote .word {
+  display: inline-block;
+  opacity: 0.14;
+  filter: blur(2px);
+  transition: opacity .6s ease, filter .6s ease;
+}
+.hist-chapter.is-in .hist-quote .word { opacity: 1; filter: blur(0); }
+.hist-caption {
+  font-size: clamp(0.58rem, 1.7vw, 0.66rem);
+  letter-spacing: 0.14em;
+  color: #8d7f70;
+  margin-top: 12px;
+  display: block;
+}
+
+/* ---------- el hilo: cadena de producto real, no puntos ---------- */
+.hilo-grano {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  background: #05060a;
+  border: 1px solid rgba(242, 236, 225, 0.32);
+  flex: 0 0 auto;
+  display: block;
+  transition: transform .4s cubic-bezier(.16, 1, .3, 1), border-color .4s ease, box-shadow .4s ease;
+}
+/* el punto se ve de 20px pero el área de toque real es de 44px -- va en el
+   contenedor (.hilo-nodo), no en .hilo-grano: ese tiene overflow:hidden
+   para recortar la miniatura circular, y hubiera recortado también el
+   pseudo-elemento, dejando el área de toque igual de chica que antes */
+.hilo-nodo { position: relative; }
+.hilo-nodo::before {
+  content: '';
+  position: absolute;
+  inset: -12px;
+}
+.hilo-grano img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.55;
+  filter: saturate(0.7);
+  transition: opacity .4s ease, filter .4s ease;
+}
+.hilo-grano.is-on {
+  transform: scale(1.55);
+  border-color: #e0a45f;
+  box-shadow: 0 0 0 3px rgba(196, 123, 62, 0.16), 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.hilo-grano.is-on img {
+  opacity: 1;
+  filter: saturate(1);
+}
+
+/* ---------- navbar: el logo nunca se comprime, el resto cede espacio primero ---------- */
+.nav-logo {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+.nav-logo img {
+  max-width: none;
+}
+.nav-controls {
+  flex: 0 1 auto;
+  min-width: 0;
+}
+.nav-audio, .nav-cta {
+  flex: 0 0 auto;
+}
+@media (max-width: 560px) {
+  .nav-audio-label { display: none; }
+  .nav-audio { padding: 11px 12px; gap: 7px; }
+  .nav-cta { padding: 11px 15px; }
+}
+@media (max-width: 360px) {
+  [data-role="nav"] { gap: 6px; }
+  .nav-controls { gap: 6px !important; }
+}
+
+/* ---------- franja de credenciales: hechos reales, no logos de prensa inventados ---------- */
+/* corre como un marquee, igual que las voces de comensales -- el contenido
+   está duplicado una vez en el HTML para que el loop sea perfecto (-50%). */
+.credenciales {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  padding: clamp(20px, 3.4svh, 30px) 0;
+  background: #08090c;
+  border-top: 1px solid rgba(242, 236, 225, 0.07);
+  border-bottom: 1px solid rgba(242, 236, 225, 0.07);
+  -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0, #000 6%, #000 94%, transparent 100%);
+}
+.credenciales-track {
+  display: flex;
+  align-items: center;
+  width: max-content;
+  gap: clamp(18px, 3.5vw, 44px);
+  animation: qvCredMarquee 26s linear infinite;
+}
+.credenciales:hover .credenciales-track { animation-play-state: paused; }
+.credenciales span {
+  font-size: clamp(0.64rem, 1.7vw, 0.72rem);
+  letter-spacing: 0.04em;
+  color: #8d7f70;
+  white-space: nowrap;
+  position: relative;
+  padding-left: clamp(18px, 3.5vw, 44px);
+}
+.credenciales span:first-child { padding-left: 0; }
+.credenciales span::before {
+  content: '';
+  position: absolute;
+  left: calc(clamp(18px, 3.5vw, 44px) / -2 - 1px);
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: #c47b3e;
+}
+.credenciales span:first-child::before { display: none; }
+.credenciales span.cred-icono { display: inline-flex; align-items: center; gap: 8px; color: #e0a45f; }
+.cred-icono svg { flex: 0 0 auto; color: #e0a45f; }
+@keyframes qvCredMarquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .credenciales-track { animation: none; }
+}
+
+/* ---------- botón flotante de WhatsApp: acceso rápido en todo el scroll ---------- */
+.wa-fab {
+  position: fixed;
+  z-index: 140;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 11, 10, 0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(224, 164, 95, 0.4);
+  color: #e0a45f;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  transition: opacity 1s ease, border-color .35s ease, background-color .35s ease, transform .35s cubic-bezier(.16,1,.3,1);
+}
+.wa-fab:hover {
+  border-color: #e0a45f;
+  background-color: rgba(196, 123, 62, 0.22);
+  transform: translateY(-2px);
+}
+/* desktop: se alinea con el hilo narrativo (izquierda), que no llega hasta el borde inferior */
+@media (min-width: 901px) {
+  .wa-fab { left: clamp(16px, 2.4vw, 38px); bottom: clamp(16px, 3svh, 40px); }
+}
+/* mobile: el hilo y el sello viajero están ocultos, el rincón inferior derecho está libre */
+@media (max-width: 900px) {
+  .wa-fab { right: 16px; bottom: 16px; width: 48px; height: 48px; }
+}
+
+/* ---------- volver arriba: aparece recién después de bajar, en la esquina
+   opuesta al de WhatsApp para no pisarse ---------- */
+.top-fab {
+  position: fixed;
+  z-index: 140;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(13, 11, 10, 0.82);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(224, 164, 95, 0.4);
+  color: #e0a45f;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: opacity .5s ease, border-color .35s ease, background-color .35s ease, transform .35s cubic-bezier(.16,1,.3,1);
+}
+.top-fab:hover {
+  border-color: #e0a45f;
+  background-color: rgba(196, 123, 62, 0.22);
+  transform: translateY(-2px);
+}
+.top-fab.is-visible { opacity: 1 !important; pointer-events: auto !important; }
+@media (min-width: 901px) {
+  .top-fab { right: clamp(16px, 2.4vw, 38px); bottom: clamp(16px, 3svh, 40px); }
+}
+@media (max-width: 900px) {
+  .top-fab { left: 16px; bottom: 16px; width: 48px; height: 48px; }
+}
+
+/* ============================================================
+   GALERÍA DE PLATOS -- capa aparte por completo (position:fixed,
+   z-index alto), no interfiere con nada del recorrido principal.
+   Scroll propio: cada plato ocupa el viewport entero, se desvanece
+   contra el siguiente y el fondo se acerca al tono de cada foto. */
+.galeria-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 500;
+  display: none;
+  background: #0d0b0a;
+}
+.galeria-overlay.is-open { display: block; }
+.galeria-fondo {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: #0d0b0a;
+}
+.galeria-topbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: clamp(16px, 3svh, 28px) clamp(18px, 5vw, 44px);
+  background: linear-gradient(180deg, rgba(13, 11, 10, 0.9) 0%, transparent 100%);
+  pointer-events: none;
+}
+.galeria-topbar > * { pointer-events: auto; }
+.galeria-titulo {
+  font-size: clamp(0.68rem, 1.8vw, 0.8rem);
+  letter-spacing: 0.1em;
+  color: #e0a45f;
+}
+.galeria-contador {
+  font-size: clamp(0.68rem, 1.7vw, 0.78rem);
+  color: #8d7f70;
+  margin-left: auto;
+  margin-right: 18px;
+}
+.galeria-cerrar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid rgba(242, 236, 225, 0.22);
+  background: rgba(13, 11, 10, 0.6);
+  color: #f2ece1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex: 0 0 auto;
+  transition: border-color 0.3s ease, background-color 0.3s ease, transform 0.3s ease;
+}
+.galeria-cerrar:hover { border-color: #e0a45f; background-color: rgba(196, 123, 62, 0.22); transform: rotate(90deg); }
+.galeria-scroll {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.galeria-track { position: relative; height: 1400svh; }
+.galeria-sticky {
+  position: sticky;
+  top: 0;
+  height: 100svh;
+  overflow: hidden;
+}
+.galeria-capas { position: relative; width: 100%; height: 100%; }
+.galeria-item {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(90px, 14svh, 140px) clamp(24px, 6vw, 90px) clamp(60px, 10svh, 100px);
+  opacity: 0;
+  pointer-events: none;
+  will-change: opacity, clip-path, transform;
+  transition: transform 0.4s cubic-bezier(.16, 1, .3, 1);
+}
+.galeria-item img {
+  /* las 14 fotos miden todas lo mismo -- 2:3, la relación que ya tenía la
+     mayoría; las pocas que no, se recortaron aparte para la galería (ver
+     galeria-810/e4134/825.webp). Nada de "cada una a su propio tamaño". */
+  width: auto;
+  height: 68svh;
+  aspect-ratio: 2 / 3;
+  max-width: 78vw;
+  object-fit: cover;
+  border-radius: 2px;
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
+  /* mismo preset del carrusel de El Menú de Pasos -- coherencia visual entre
+     las fotos "de vidriera" del sitio, no cada una con su propio tratamiento */
+  filter: saturate(1.05) contrast(1.03);
+}
+.galeria-hint {
+  position: fixed;
+  left: 50%;
+  bottom: clamp(18px, 3svh, 30px);
+  transform: translateX(-50%);
+  z-index: 3;
+  font-size: clamp(0.5rem, 1.4vw, 0.58rem);
+  letter-spacing: 0.2em;
+  color: #8d7f70;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .galeria-item { transition: opacity 0.3s ease; }
+}
+@media (max-width: 700px) {
+  .galeria-item img { max-width: 88vw; max-height: 58svh; }
+  .galeria-hint { display: none; }
+}
