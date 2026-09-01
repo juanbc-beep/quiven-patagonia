@@ -179,7 +179,7 @@ const App = {
     let tResize;
     this.onResize = () => {
       clearTimeout(tResize);
-      tResize = setTimeout(() => { this.calcMedidas(); this.pintar(); }, 150);
+      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this.pintar(); }, 150);
     };
     window.addEventListener('resize', this.onResize);
 
@@ -702,9 +702,15 @@ const App = {
 
     const nav = q('[data-role="nav"]');
     if (nav) {
+      // backdrop-filter es de lo más caro de togglear -- reescribirlo en cada
+      // scroll tick aunque el estado no haya cambiado fuerza una revisión de
+      // repintado igual. Solo se toca el DOM cuando "sólido" realmente cambia.
       const solido = y > window.innerHeight * 0.6;
-      nav.style.backgroundColor = solido ? 'rgba(5,6,10,0.72)' : 'transparent';
-      nav.style.backdropFilter = solido ? 'blur(14px)' : 'none';
+      if (solido !== this._navSolido) {
+        this._navSolido = solido;
+        nav.style.backgroundColor = solido ? 'rgba(5,6,10,0.72)' : 'transparent';
+        nav.style.backdropFilter = solido ? 'blur(14px)' : 'none';
+      }
     }
 
     this.parallax(y);
@@ -761,10 +767,44 @@ const App = {
 
   /* ---------- 01 descenso: cielo -> aérea -> costa -> la casa ---------- */
   pintarDescenso(y) {
-    const zona = q('[data-role="descenso"]');
-    if (!zona) return;
-    const alto = zona.offsetHeight - window.innerHeight;
-    const p = clamp((y - zona.offsetTop) / Math.max(1, alto), 0, 1);
+    // el descenso mide ~2700px sobre una página de ~10700px -- sin esta guarda,
+    // esta función hacía 10+ querySelector y reescribía estilos en cada scroll
+    // tick durante TODA la página, aunque el usuario estuviera en Voces o
+    // Experiencia a miles de px de acá. Los elementos se resuelven una sola vez
+    // y se cachean; la geometría de la zona también, invalidada solo en resize.
+    if (this._dEls === undefined) {
+      const zona = q('[data-role="descenso"]');
+      this._dEls = zona ? {
+        zona,
+        cielo: q('[data-role="c-cielo"]'),
+        fondo: q('[data-role="d-fondo"]'),
+        nubes: q('[data-role="c-nubes"]'),
+        atmosfera: q('[data-role="d-atmosfera"]'),
+        flash: q('[data-role="d-flash"]'),
+        capas: [
+          [q('[data-role="d-1"]'), 0.4, 0.6, 1.4, 0.4, 0.4],
+          [q('[data-role="d-2"]'), 0.58, 0.78, 1.3, 0.34, 0.4],
+          [q('[data-role="d-3"]'), 0.76, 1.02, 1.22, 0.22, 0.24]
+        ],
+        etiqueta: q('[data-role="d-etiqueta"]'),
+        titulo: q('[data-role="d-titulo"]'),
+        texto: q('[data-role="d-texto"]'),
+        alt: q('[data-role="d-alt"]')
+      } : null;
+    }
+    const els = this._dEls;
+    if (!els) return;
+    if (!this._dGeom) this._dGeom = { top: els.zona.offsetTop, alto: els.zona.offsetHeight };
+    const alto = this._dGeom.alto - window.innerHeight;
+    const p = clamp((y - this._dGeom.top) / Math.max(1, alto), 0, 1);
+
+    // ya quedó asentada en su valor final de un lado o del otro -- no hay
+    // nada nuevo que pintar hasta que el usuario vuelva a entrar en la zona.
+    const primeraVez = this._dP === undefined;
+    const yaAsentada = !primeraVez && ((p <= 0 && this._dP <= 0) || (p >= 1 && this._dP >= 1));
+    this._dP = p;
+    if (yaAsentada) return;
+
     // el avance de las estrellas crece durante todo el tramo previo a que
     // entren las fotos reales, sin meseta: el zoom + las vetas de atmósfera
     // (ver cielo()) tienen que sentirse en movimiento continuo hasta el
@@ -772,51 +812,46 @@ const App = {
     this.cieloAvance = clamp(p / 0.38, 0, 1);
     // presencia real dentro (o recién saliendo) del descenso: el grano de fondo
     // sube con la atmósfera y se apaga solo, no queda prendido el resto del sitio
-    const finZona = zona.offsetTop + zona.offsetHeight;
+    const finZona = this._dGeom.top + this._dGeom.alto;
     const presencia = 1 - clamp((y - finZona) / window.innerHeight, 0, 1);
     this.granoAvance = this.cieloAvance * presencia;
 
-    const cielo = q('[data-role="c-cielo"]');
     // ventanas de entrada/salida más anchas y superpuestas: dos capas conviven
     // en pantalla mientras se cruzan, así el descenso lee como un zoom continuo
     // en vez de tres fotos que se van pisando una a la otra.
-    const capas = [
-      [q('[data-role="d-1"]'), 0.4, 0.6, 1.4, 0.4, 0.4],
-      [q('[data-role="d-2"]'), 0.58, 0.78, 1.3, 0.34, 0.4],
-      // la capa final no sale de escena: tiene que terminar de asentarse
-      // exactamente en escala 1 justo cuando el scroll llega a p=1, para que
-      // el cierre del descenso se sienta como una llegada, no un corte a mitad de zoom.
-      [q('[data-role="d-3"]'), 0.76, 1.02, 1.22, 0.22, 0.24]
-    ];
     const fadeCielo = 1 - clamp((p - 0.42) / 0.16, 0, 1);
-    if (cielo) cielo.style.opacity = String(fadeCielo);
+    if (els.cielo) els.cielo.style.opacity = String(fadeCielo);
     // la foto de fondo detrás de las estrellas evita que el arranque del
     // descenso se vea como una pantalla negra vacía -- se apaga junto al cielo.
-    const fondo = q('[data-role="d-fondo"]');
-    if (fondo) fondo.style.opacity = String(0.85 * fadeCielo);
-    const nubes = q('[data-role="c-nubes"]');
-    if (nubes) nubes.style.opacity = String(fadeCielo);
+    if (els.fondo) els.fondo.style.opacity = String(0.85 * fadeCielo);
+    if (els.nubes) els.nubes.style.opacity = String(fadeCielo);
     // deriva atmosférica: el cielo nocturno (azul) vira a la luz cálida del
-    // amanecer sobre el lago a medida que se avanza en el descenso completo
-    const atmosfera = q('[data-role="d-atmosfera"]');
-    if (atmosfera) {
-      const hue = 222 - p * 190;
-      const alfa = 0.1 + Math.sin(p * Math.PI) * 0.12;
-      atmosfera.style.background = 'linear-gradient(180deg, hsla(' + hue + ',68%,54%,' + alfa + ') 0%, transparent 52%, hsla(' + (hue - 18) + ',78%,50%,' + (alfa * 0.75) + ') 100%)';
+    // amanecer sobre el lago a medida que se avanza en el descenso completo.
+    // redondeado grueso a propósito: reescribir un gradient de pantalla completa
+    // con un string nuevo en CADA frame de scroll fuerza repintado aunque el
+    // color casi no haya cambiado -- con pasos de a 2°/0.02 alcanza y sobra
+    // para que se vea continuo, y solo se toca el DOM cuando el valor cambió.
+    if (els.atmosfera) {
+      const hue = Math.round((222 - p * 190) / 2) * 2;
+      const alfa = Math.round((0.1 + Math.sin(p * Math.PI) * 0.12) * 50) / 50;
+      const clave = hue + ':' + alfa;
+      if (clave !== this._atmClave) {
+        this._atmClave = clave;
+        els.atmosfera.style.background = 'linear-gradient(180deg, hsla(' + hue + ',68%,54%,' + alfa + ') 0%, transparent 52%, hsla(' + (hue - 18) + ',78%,50%,' + (alfa * 0.75) + ') 100%)';
+      }
     }
     // destello cálido justo en el cruce cielo -> foto real: reemplaza al
     // globo 3D como el momento de "llegada", sin depender de three.js.
-    const flash = q('[data-role="d-flash"]');
-    if (flash) {
+    if (els.flash) {
       const entra = clamp((p - 0.32) / 0.1, 0, 1);
       const sale = clamp((p - 0.46) / 0.14, 0, 1);
-      flash.style.opacity = String(entra * (1 - sale) * 0.85);
+      els.flash.style.opacity = String(entra * (1 - sale) * 0.85);
     }
-    capas.forEach((c, i) => {
+    els.capas.forEach((c, i) => {
       const el = c[0];
       if (!el) return;
       const entra = clamp((p - c[1]) / 0.2, 0, 1);
-      const sale = i < capas.length - 1 ? clamp((p - c[2]) / 0.18, 0, 1) : 0;
+      const sale = i < els.capas.length - 1 ? clamp((p - c[2]) / 0.18, 0, 1) : 0;
       el.style.opacity = String(entra * (1 - sale));
       const escala = c[3] - clamp((p - c[1]) / (c[5] || 0.4), 0, 1) * c[4];
       const deriva = (1 - entra) * 26;
@@ -828,16 +863,15 @@ const App = {
     if (etapa !== this._etapa) {
       this._etapa = etapa;
       const d = DESCENSO[etapa];
-      [['[data-role="d-etiqueta"]', d.e], ['[data-role="d-titulo"]', d.t], ['[data-role="d-texto"]', d.x]].forEach(par => {
-        const el = q(par[0]);
+      [[els.etiqueta, d.e], [els.titulo, d.t], [els.texto, d.x]].forEach(par => {
+        const el = par[0];
         if (!el) return;
         el.style.transition = 'opacity .45s ease,transform .6s cubic-bezier(.16,1,.3,1)';
         el.style.opacity = '0';
         el.style.transform = 'translateY(10px)';
         setTimeout(() => { if (!el) return; el.textContent = par[1]; el.style.opacity = '1'; el.style.transform = 'none'; }, 300);
       });
-      const altEl = q('[data-role="d-alt"]');
-      if (altEl) this.odometro(altEl, d.km);
+      if (els.alt) this.odometro(els.alt, d.km);
     }
   },
 

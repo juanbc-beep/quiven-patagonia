@@ -321,9 +321,15 @@ button { font: inherit; }
   [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
 
-/* ---------- foto de fondo del descenso: brillo real + sway sutil en el follaje + zoom lento ---------- */
+/* ---------- foto de fondo del descenso: brillo real + zoom lento ---------- */
+/* el "sway" del follaje usaba un filtro SVG animado (feTurbulence+feDisplacementMap,
+   ver #qv-sway) -- Chromium no acelera filtros SVG por GPU, así que se
+   rasterizaba por software en cada frame, todo el tiempo que el usuario pasa
+   en la primera sección después de "Continuar". El efecto era casi
+   imperceptible; el costo era real y constante. Se saca del todo: queda solo
+   el zoom lento por transform, que sí compone barato en cualquier GPU. */
 .d-fondo-img {
-  filter: url(#qv-sway) brightness(0.86) saturate(1.1) blur(0.3px);
+  filter: brightness(0.86) saturate(1.1) blur(0.3px);
   transform-origin: 54% 46%;
   animation: qvFondoZoom 55s cubic-bezier(.3, 0, .4, 1) forwards;
   will-change: transform;
@@ -333,11 +339,8 @@ button { font: inherit; }
   to { transform: scale(1.1); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .d-fondo-img { filter: brightness(0.86) saturate(1.1) blur(0.3px); animation: none; }
+  .d-fondo-img { animation: none; }
 }
-/* filtro SVG animado (feTurbulence+feDisplacementMap) es caro de componer en
-   GPUs de gama baja -- ahí se saca y queda solo brillo/saturación fijos */
-html.gama-baja .d-fondo-img { filter: brightness(0.86) saturate(1.1) blur(0.3px); }
 
 /* ---------- variantes de reveal por sección: no todo se forma igual ---------- */
 /* el clip-path va en un wrapper interno, no en el elemento observado: si el

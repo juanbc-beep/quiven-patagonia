@@ -3,6 +3,36 @@ window.Q3D = (function () {
   const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
   const lerp = (a, b, t) => a + (b - a) * t;
 
+  // partículas prerenderizadas: un createRadialGradient() nuevo por partícula,
+  // por frame (150 brasas + 9 humos, 60 veces por segundo) es carísimo en
+  // Canvas2D. Se prepara una vez una paleta chica de sprites (círculo con
+  // gradiente ya "horneado") y cada frame sólo se hace drawImage() escalado
+  // -- mismo resultado visual, sin asignar un gradiente nuevo por partícula.
+  let _sprites = null;
+  function spritesFuego() {
+    if (_sprites) return _sprites;
+    const SIZE = 64, R = SIZE / 2;
+    const hornear = (r, g_, b) => {
+      const cv = document.createElement('canvas');
+      cv.width = SIZE; cv.height = SIZE;
+      const gg = cv.getContext('2d');
+      const grad = gg.createRadialGradient(R, R, 0, R, R, R);
+      grad.addColorStop(0, 'rgba(' + r + ',' + g_ + ',' + b + ',1)');
+      grad.addColorStop(1, 'rgba(' + r + ',' + g_ + ',' + b + ',0)');
+      gg.fillStyle = grad;
+      gg.beginPath(); gg.arc(R, R, R, 0, 6.2832); gg.fill();
+      return cv;
+    };
+    const PASOS = 16;
+    const brasas = [];
+    for (let i = 0; i < PASOS; i++) {
+      const t = i / (PASOS - 1);
+      brasas.push(hornear(Math.round(lerp(255, 199, t)), Math.round(lerp(219, 72, t)), Math.round(lerp(133, 18, t))));
+    }
+    _sprites = { brasas, PASOS, humo: hornear(230, 224, 214) };
+    return _sprites;
+  }
+
   /* ---------- fuego y brasas: partículas reales sobre canvas 2D ---------- */
   function fuego(canvas, densidad, dprMax) {
     const g = canvas.getContext('2d');
@@ -60,6 +90,7 @@ window.Q3D = (function () {
     for (let i = 0; i < NH; i++) { const h = {}; resetHumo(h); h.y = Math.random() * 0.9; humos.push(h); }
 
     let inten = 1, iv = 1, activo = true, muerto = false, last = performance.now();
+    const { brasas: spritesBrasa, PASOS, humo: spriteHumo } = spritesFuego();
 
     const loop = now => {
       if (muerto) return;
@@ -79,11 +110,8 @@ window.Q3D = (function () {
         const cx = h.x * W, cy = h.y * H, rad = h.r * Math.max(W, H) * 0.55;
         const op = clamp(0.1 * iv * (1 - h.y), 0, 0.11);
         if (op <= 0.002) return;
-        const grad = g.createRadialGradient(cx, cy, 0, cx, cy, rad);
-        grad.addColorStop(0, 'rgba(230,224,214,' + op + ')');
-        grad.addColorStop(1, 'rgba(230,224,214,0)');
-        g.fillStyle = grad;
-        g.beginPath(); g.arc(cx, cy, rad, 0, 6.2832); g.fill();
+        g.globalAlpha = op;
+        g.drawImage(spriteHumo, cx - rad, cy - rad, rad * 2, rad * 2);
       });
       g.restore();
 
@@ -97,15 +125,11 @@ window.Q3D = (function () {
         p.y += p.vy * dt * iv;
         const cx = p.x * W, cy = p.y * H;
         if (cy < -0.05 * H) return;
-        const rad = p.r * Math.max(W, H) * (1 - p.vida * 0.4);
+        const rad = Math.max(0.5, p.r * Math.max(W, H) * (1 - p.vida * 0.4));
         const alfa = Math.pow(1 - p.vida, 1.6) * 0.7;
-        const t = p.vida;
-        const rC = Math.round(lerp(255, 199, t)), gC = Math.round(lerp(219, 72, t)), bC = Math.round(lerp(133, 18, t));
-        const grad = g.createRadialGradient(cx, cy, 0, cx, cy, Math.max(0.5, rad));
-        grad.addColorStop(0, 'rgba(' + rC + ',' + gC + ',' + bC + ',' + alfa + ')');
-        grad.addColorStop(1, 'rgba(' + rC + ',' + gC + ',' + bC + ',0)');
-        g.fillStyle = grad;
-        g.beginPath(); g.arc(cx, cy, Math.max(0.5, rad), 0, 6.2832); g.fill();
+        const sprite = spritesBrasa[Math.min(PASOS - 1, Math.floor(p.vida * PASOS))];
+        g.globalAlpha = alfa;
+        g.drawImage(sprite, cx - rad, cy - rad, rad * 2, rad * 2);
       });
       g.restore();
     };
