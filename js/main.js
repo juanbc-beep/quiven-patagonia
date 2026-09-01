@@ -77,16 +77,16 @@ const CITAS_EN = [
 ];
 
 let DESCENSO = [
-  { p: 0.00, e: 'ÓRBITA · HEMISFERIO SUR', t: 'Un plato empieza mucho antes de la cocina', x: 'Deslizá para descender. El viaje termina en una casa sobre el Nahuel Huapi.', km: '384 400' },
-  { p: 0.26, e: 'ATMÓSFERA · CONO SUR', t: 'Hay un punto donde la cordillera toca el agua', x: 'Cuarenta y un grados al sur. Ahí abajo empieza el territorio que escribe la carta.', km: '9 200' },
-  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'Un lago de deshielo, ochenta kilómetros de costa', x: 'Bosque de coihue, ladera con hongos, agua dulce. Todo lo que se sirve viene de este radio.', km: '740' },
+  { p: 0.00, e: 'SOBREVUELO · PATAGONIA', t: 'Un plato empieza mucho antes de la cocina', x: 'Deslizá para descender. El viaje termina en una casa sobre el Nahuel Huapi.', km: '2 400' },
+  { p: 0.26, e: 'CORDILLERA · CONO SUR', t: 'Hay un punto donde la cordillera toca el agua', x: 'Cuarenta y un grados al sur. Ahí abajo empieza el territorio que escribe la carta.', km: '640' },
+  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'Un lago de deshielo, ochenta kilómetros de costa', x: 'Bosque de coihue, ladera con hongos, agua dulce. Todo lo que se sirve viene de este radio.', km: '95' },
   { p: 0.78, e: 'AV. BUSTILLO 19688 · PLANTA ALTA', t: 'Quiven Patagonia House Kitchen', x: 'Una casa sobre el lago. Adentro, cinco pasos y una cocina a la vista. Llegaste.', km: '0' }
 ];
 const DESCENSO_ES = DESCENSO;
 const DESCENSO_EN = [
-  { p: 0.00, e: 'ORBIT · SOUTHERN HEMISPHERE', t: 'A dish begins long before the kitchen', x: 'Scroll to descend. The journey ends in a house on the Nahuel Huapi.', km: '384,400' },
-  { p: 0.26, e: 'ATMOSPHERE · SOUTHERN CONE', t: 'There’s a point where the mountains meet the water', x: 'Forty-one degrees south. Down there begins the territory that writes the menu.', km: '9,200' },
-  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'A glacial lake, fifty miles of coastline', x: 'Coihue forest, hillside mushrooms, fresh water. Everything served comes from this radius.', km: '460' },
+  { p: 0.00, e: 'FLYOVER · PATAGONIA', t: 'A dish begins long before the kitchen', x: 'Scroll to descend. The journey ends in a house on the Nahuel Huapi.', km: '2,400' },
+  { p: 0.26, e: 'MOUNTAINS · SOUTHERN CONE', t: 'There’s a point where the mountains meet the water', x: 'Forty-one degrees south. Down there begins the territory that writes the menu.', km: '640' },
+  { p: 0.52, e: 'NAHUEL HUAPI · 41°07′ S', t: 'A glacial lake, fifty miles of coastline', x: 'Coihue forest, hillside mushrooms, fresh water. Everything served comes from this radius.', km: '95' },
   { p: 0.78, e: 'AV. BUSTILLO 19688 · UPPER FLOOR', t: 'Quiven Patagonia House Kitchen', x: 'A house on the lake. Inside, five courses and an open kitchen. You’ve arrived.', km: '0' }
 ];
 
@@ -196,10 +196,6 @@ const App = {
     this.grano();
     this.ticks();
     this.cursor();
-    this.cielo();
-    // las nubes son puro adorno encima de estrellas + foto + sway: en gama
-    // baja es la capa más fácil de sacar entera sin perder la escena
-    if (!this.gamaBaja) this.nubes();
     this.hilo();
     this.territorio();
     this.pase();
@@ -460,189 +456,6 @@ const App = {
     });
   },
 
-  /* ---------- cielo real: campo de estrellas 2D, sin planeta falso ---------- */
-  cielo() {
-    const c = q('[data-role="c-cielo"]');
-    if (!c) return;
-    const g = c.getContext('2d');
-    let W = 0, H = 0, estrellas = [];
-    const dpr = Math.min(window.devicePixelRatio || 1, this.gamaBaja ? 1 : 1.5);
-    // el tamaño se lee siempre del contenedor, nunca del propio canvas: observar
-    // el canvas y fijar su width/height desde su propio clientWidth es un bucle
-    // de retroalimentación real -- explotó a 67.108.864px en mobile.
-    const padre = c.parentElement;
-    const armar = () => {
-      W = Math.min(4000, padre.clientWidth); H = Math.min(4000, padre.clientHeight);
-      c.width = Math.max(1, Math.round(W * dpr)); c.height = Math.max(1, Math.round(H * dpr));
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      // las estrellas viven en el cielo, no tapan el paisaje real de abajo (d-fondo)
-      const n = Math.round(clamp(W * H / (this.gamaBaja ? 10000 : 6200), 60, this.gamaBaja ? 220 : 480));
-      estrellas = [];
-      for (let i = 0; i < n; i++) {
-        estrellas.push({
-          x: Math.random(), y: Math.random() * 0.46,
-          z: 0.25 + Math.random() * 0.75,
-          r: 0.35 + Math.random() * 1.25,
-          f: Math.random() * 6.28
-        });
-      }
-    };
-    armar();
-    const ro = new ResizeObserver(armar);
-    ro.observe(padre);
-    this.observadores.push(ro);
-
-    this.cieloAvance = 0;
-    let visible = true;
-    const io = new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; }), { threshold: 0.01 });
-    io.observe(c);
-    this.observadores.push(io);
-
-    // estrella fugaz ocasional, solo mientras dura la fase de cielo abierto --
-    // un detalle que no se repite en cada visita a la misma hora, a diferencia
-    // del resto de la animación que es determinística
-    let fugaz = null;
-    const reduced = this.reduced;
-
-    const pintar = t => {
-      if (this.dead) return;
-      requestAnimationFrame(pintar);
-      if (!visible) return;
-      const av = this.cieloAvance;
-      g.clearRect(0, 0, W, H);
-      const grad = g.createRadialGradient(W * 0.5, H * 0.42, 0, W * 0.5, H * 0.42, Math.max(W, H) * 0.75);
-      grad.addColorStop(0, 'rgba(22,32,56,' + (0.28 - av * 0.22) + ')');
-      grad.addColorStop(1, 'rgba(5,6,10,0)');
-      g.fillStyle = grad;
-      g.fillRect(0, 0, W, H);
-      const zoom = 1 + av * 2.6;
-      // más allá de la mitad del avance, las estrellas dejan de ser puntos: se
-      // estiran en vetas radiales -- la sensación de atravesar la atmósfera a velocidad,
-      // no solo un fundido a foto.
-      const veta = clamp((av - 0.42) / 0.4, 0, 1);
-      estrellas.forEach((s, i) => {
-        const px = (s.x - 0.5) * W * zoom * (0.7 + s.z * 0.6) + W / 2;
-        const py = (s.y - 0.5) * H * zoom * (0.7 + s.z * 0.6) + H / 2 + av * 120 * s.z;
-        if (px < -40 || px > W + 40 || py < -40 || py > H + 40) return;
-        const tw = 0.55 + Math.sin(t / 760 + s.f) * 0.45;
-        const alfa = clamp(s.z * tw * (1 - av * 1.15) + veta * s.z * 0.5, 0, 1);
-        if (alfa <= 0) return;
-        g.globalAlpha = alfa;
-        g.fillStyle = i % 11 === 0 ? '#ffe6c4' : '#e6ecf7';
-        if (veta > 0.02) {
-          const dx = px - W / 2, dy = py - H / 2;
-          const largo = veta * (0.18 + s.z * 0.5) * Math.max(W, H);
-          const dist = Math.max(1, Math.hypot(dx, dy));
-          g.strokeStyle = g.fillStyle;
-          g.lineWidth = s.r * (0.6 + s.z * 0.6);
-          g.beginPath();
-          g.moveTo(px, py);
-          g.lineTo(px + (dx / dist) * largo, py + (dy / dist) * largo);
-          g.stroke();
-        } else {
-          g.beginPath();
-          g.arc(px, py, s.r * (0.8 + s.z * 0.7), 0, 6.2832);
-          g.fill();
-        }
-      });
-
-      if (!reduced && av > 0.03 && av < 0.55) {
-        if (!fugaz && Math.random() < 0.0018) {
-          fugaz = { x: 0.08 + Math.random() * 0.55, y: Math.random() * 0.22, ang: 0.55 + Math.random() * 0.25, start: t, dur: 650 + Math.random() * 350 };
-        }
-        if (fugaz) {
-          const pr = (t - fugaz.start) / fugaz.dur;
-          if (pr >= 1) {
-            fugaz = null;
-          } else {
-            const dist = pr * 0.5;
-            const hx = (fugaz.x + Math.cos(fugaz.ang) * dist) * W;
-            const hy = (fugaz.y + Math.sin(fugaz.ang) * dist) * H;
-            const tx = (fugaz.x + Math.cos(fugaz.ang) * Math.max(0, dist - 0.09)) * W;
-            const ty = (fugaz.y + Math.sin(fugaz.ang) * Math.max(0, dist - 0.09)) * H;
-            const alfaFugaz = Math.sin(clamp(pr, 0, 1) * Math.PI);
-            const trazo = g.createLinearGradient(tx, ty, hx, hy);
-            trazo.addColorStop(0, 'rgba(255,240,220,0)');
-            trazo.addColorStop(1, 'rgba(255,240,220,' + alfaFugaz + ')');
-            g.strokeStyle = trazo;
-            g.lineWidth = 1.6;
-            g.beginPath();
-            g.moveTo(tx, ty);
-            g.lineTo(hx, hy);
-            g.stroke();
-            g.globalAlpha = alfaFugaz;
-            g.fillStyle = '#fff6ea';
-            g.beginPath();
-            g.arc(hx, hy, 1.6, 0, 6.2832);
-            g.fill();
-          }
-        }
-      } else if (fugaz) {
-        fugaz = null;
-      }
-
-      g.globalAlpha = 1;
-    };
-    requestAnimationFrame(pintar);
-  },
-
-  /* ---------- nubes: la referencia que trajo el usuario (cielo dramático en
-     movimiento) recreada en código sobre su propia foto real, sin usar el
-     video ajeno -- nubes suaves derivando despacio por el cielo ---------- */
-  nubes() {
-    const c = q('[data-role="c-nubes"]');
-    if (!c || this.reduced) return;
-    const g = c.getContext('2d');
-    let W = 0, H = 0, nubes = [];
-    const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    const padre = c.parentElement;
-    const armar = () => {
-      W = Math.min(4000, padre.clientWidth); H = Math.min(4000, padre.clientHeight);
-      c.width = Math.max(1, Math.round(W * dpr)); c.height = Math.max(1, Math.round(H * dpr));
-      g.setTransform(dpr, 0, 0, dpr, 0, 0);
-      const n = Math.round(clamp(W / 220, 4, 9));
-      nubes = [];
-      for (let i = 0; i < n; i++) {
-        nubes.push({
-          x: Math.random(), y: Math.random() * 0.42,
-          w: 0.14 + Math.random() * 0.24,
-          h: 0.028 + Math.random() * 0.03,
-          v: 0.00015 + Math.random() * 0.00035,
-          op: 0.08 + Math.random() * 0.14
-        });
-      }
-    };
-    armar();
-    const ro = new ResizeObserver(armar);
-    ro.observe(padre);
-    this.observadores.push(ro);
-    let visible = true;
-    const io = new IntersectionObserver(es => es.forEach(e => { visible = e.isIntersecting; }), { threshold: 0.01 });
-    io.observe(c);
-    this.observadores.push(io);
-    const pintar = () => {
-      if (this.dead) return;
-      requestAnimationFrame(pintar);
-      if (!visible) return;
-      g.clearRect(0, 0, W, H);
-      nubes.forEach(nb => {
-        nb.x += nb.v;
-        if (nb.x > 1.3) nb.x = -0.3;
-        const cx = nb.x * W, cy = nb.y * H, rw = nb.w * W, rh = nb.h * H;
-        const grad = g.createRadialGradient(cx, cy, 0, cx, cy, rw);
-        grad.addColorStop(0, 'rgba(214,222,236,' + nb.op + ')');
-        grad.addColorStop(1, 'rgba(214,222,236,0)');
-        g.save();
-        g.translate(cx, cy);
-        g.scale(1, rh / rw);
-        g.fillStyle = grad;
-        g.beginPath(); g.arc(0, 0, rw, 0, 6.2832); g.fill();
-        g.restore();
-      });
-    };
-    requestAnimationFrame(pintar);
-  },
-
   /* ---------- hilo narrativo ---------- */
   /* el hilo no son puntos: es la cadena de producto real que atraviesa cada
      capítulo, engarzada en la línea -- el único acompañante del recorrido. */
@@ -765,7 +578,10 @@ const App = {
     });
   },
 
-  /* ---------- 01 descenso: cielo -> aérea -> costa -> la casa ---------- */
+  /* ---------- 01 descenso: sobrevuelo -> cordillera -> costa -> la casa,
+     una secuencia fotográfica real, sin generativo -- ver conversación:
+     el campo de estrellas + zoom orbital quedaba desconectado del lenguaje
+     fotográfico del resto del sitio y se leía como "efecto", no como lugar. ---------- */
   pintarDescenso(y) {
     // el descenso mide ~2700px sobre una página de ~10700px -- sin esta guarda,
     // esta función hacía 10+ querySelector y reescribía estilos en cada scroll
@@ -776,15 +592,13 @@ const App = {
       const zona = q('[data-role="descenso"]');
       this._dEls = zona ? {
         zona,
-        cielo: q('[data-role="c-cielo"]'),
         fondo: q('[data-role="d-fondo"]'),
-        nubes: q('[data-role="c-nubes"]'),
         atmosfera: q('[data-role="d-atmosfera"]'),
         flash: q('[data-role="d-flash"]'),
         capas: [
-          [q('[data-role="d-1"]'), 0.4, 0.6, 1.4, 0.4, 0.4],
-          [q('[data-role="d-2"]'), 0.58, 0.78, 1.3, 0.34, 0.4],
-          [q('[data-role="d-3"]'), 0.76, 1.02, 1.22, 0.22, 0.24]
+          [q('[data-role="d-1"]'), 0.16, 0.46, 1.3, 0.4, 0.4],
+          [q('[data-role="d-2"]'), 0.42, 0.72, 1.24, 0.34, 0.4],
+          [q('[data-role="d-3"]'), 0.68, 1.02, 1.16, 0.22, 0.24]
         ],
         etiqueta: q('[data-role="d-etiqueta"]'),
         titulo: q('[data-role="d-titulo"]'),
@@ -805,32 +619,25 @@ const App = {
     this._dP = p;
     if (yaAsentada) return;
 
-    // el avance de las estrellas crece durante todo el tramo previo a que
-    // entren las fotos reales, sin meseta: el zoom + las vetas de atmósfera
-    // (ver cielo()) tienen que sentirse en movimiento continuo hasta el
-    // momento en que el cielo le cede el lugar a la foto aérea real.
-    this.cieloAvance = clamp(p / 0.38, 0, 1);
+    // ritmo de aproximación durante el primer tramo -- se usa nada más para
+    // modular el grano de fondo, no hay una fase separada que "ceder terreno"
+    this.aproxAvance = clamp(p / 0.38, 0, 1);
     // presencia real dentro (o recién saliendo) del descenso: el grano de fondo
-    // sube con la atmósfera y se apaga solo, no queda prendido el resto del sitio
+    // sube con la aproximación y se apaga solo, no queda prendido el resto del sitio
     const finZona = this._dGeom.top + this._dGeom.alto;
     const presencia = 1 - clamp((y - finZona) / window.innerHeight, 0, 1);
-    this.granoAvance = this.cieloAvance * presencia;
+    this.granoAvance = this.aproxAvance * presencia;
 
-    // ventanas de entrada/salida más anchas y superpuestas: dos capas conviven
-    // en pantalla mientras se cruzan, así el descenso lee como un zoom continuo
-    // en vez de tres fotos que se van pisando una a la otra.
-    const fadeCielo = 1 - clamp((p - 0.42) / 0.16, 0, 1);
-    if (els.cielo) els.cielo.style.opacity = String(fadeCielo);
-    // la foto de fondo detrás de las estrellas evita que el arranque del
-    // descenso se vea como una pantalla negra vacía -- se apaga junto al cielo.
-    if (els.fondo) els.fondo.style.opacity = String(0.85 * fadeCielo);
-    if (els.nubes) els.nubes.style.opacity = String(fadeCielo);
-    // deriva atmosférica: el cielo nocturno (azul) vira a la luz cálida del
-    // amanecer sobre el lago a medida que se avanza en el descenso completo.
-    // redondeado grueso a propósito: reescribir un gradient de pantalla completa
-    // con un string nuevo en CADA frame de scroll fuerza repintado aunque el
-    // color casi no haya cambiado -- con pasos de a 2°/0.02 alcanza y sobra
-    // para que se vea continuo, y solo se toca el DOM cuando el valor cambió.
+    // la foto de fondo (sobrevuelo inicial) se queda de entrada y se apaga
+    // recién cuando la primera foto real (d-1) ya está tomando su lugar --
+    // el zoom lento es CSS puro (qvFondoZoom), acá solo se controla la opacidad
+    if (els.fondo) els.fondo.style.opacity = String(1 - clamp((p - 0.16) / 0.22, 0, 1));
+    // neblina de altura: un velo frío se despeja en la luz cálida de la costa
+    // a medida que se avanza -- redondeado grueso a propósito: reescribir un
+    // gradient de pantalla completa con un string nuevo en CADA frame de scroll
+    // fuerza repintado aunque el color casi no haya cambiado -- con pasos de
+    // a 2°/0.02 alcanza y sobra para que se vea continuo, y solo se toca el
+    // DOM cuando el valor cambió.
     if (els.atmosfera) {
       const hue = Math.round((222 - p * 190) / 2) * 2;
       const alfa = Math.round((0.1 + Math.sin(p * Math.PI) * 0.12) * 50) / 50;
@@ -840,11 +647,11 @@ const App = {
         els.atmosfera.style.background = 'linear-gradient(180deg, hsla(' + hue + ',68%,54%,' + alfa + ') 0%, transparent 52%, hsla(' + (hue - 18) + ',78%,50%,' + (alfa * 0.75) + ') 100%)';
       }
     }
-    // destello cálido justo en el cruce cielo -> foto real: reemplaza al
-    // globo 3D como el momento de "llegada", sin depender de three.js.
+    // destello cálido justo cuando se asienta la última foto (el salón): el
+    // momento de "llegada", sin depender de ningún efecto generativo.
     if (els.flash) {
-      const entra = clamp((p - 0.32) / 0.1, 0, 1);
-      const sale = clamp((p - 0.46) / 0.14, 0, 1);
+      const entra = clamp((p - 0.66) / 0.08, 0, 1);
+      const sale = clamp((p - 0.78) / 0.12, 0, 1);
       els.flash.style.opacity = String(entra * (1 - sale) * 0.85);
     }
     els.capas.forEach((c, i) => {
