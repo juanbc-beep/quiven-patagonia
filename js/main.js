@@ -1323,7 +1323,6 @@ const App = {
       const hex = (it.dataset.color || '#0d0b0a').replace('#', '');
       return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
     });
-    const mezclarColor = (a, b, t) => 'rgb(' + a.map((v, i) => Math.round(v + (b[i] - v) * t)).join(',') + ')';
 
     // mismo lenguaje del resto del sitio: leve inclinación 3D con el mouse,
     // pero solo sobre la capa que en ese momento recibe punteros (idxActual)
@@ -1390,24 +1389,42 @@ const App = {
         }
       });
 
+      // el corte de la costura, la foto y el color de fondo son UNA sola
+      // transición: la costura no solo revela la foto, también revela el
+      // color sólido de esa foto -- por eso el fondo no es un blend/gradiente
+      // continuo entre los dos colores (eso se ve como un fundido lento,
+      // no como un corte), sino un reparto duro en dos zonas sólidas que se
+      // parte exactamente en la misma línea que la costura y el clip-path.
+      const mostrarCostura = haySiguiente && wipe > 0 && wipe < 1;
+      let cutFrame = null, cutRect = null;
+      if ((mostrarCostura || (fondo && haySiguiente)) && sticky) {
+        cutFrame = frames[i + 1];
+        cutRect = cutFrame ? cutFrame.getBoundingClientRect() : null;
+      }
       if (fondo) {
-        fondo.style.backgroundColor = haySiguiente
-          ? mezclarColor(colores[i], colores[i + 1], wipe)
-          : mezclarColor(colores[i], colores[i], 0);
+        const cA = 'rgb(' + colores[i].join(',') + ')';
+        if (!haySiguiente || wipe <= 0) {
+          fondo.style.background = cA;
+        } else if (wipe >= 1) {
+          fondo.style.background = 'rgb(' + colores[i + 1].join(',') + ')';
+        } else if (cutRect) {
+          const cB = 'rgb(' + colores[i + 1].join(',') + ')';
+          const fRect = fondo.getBoundingClientRect();
+          const cutY = cutRect.top + wipe * cutRect.height;
+          const pct = clamp((cutY - fRect.top) / fRect.height * 100, 0, 100);
+          fondo.style.background = 'linear-gradient(180deg,' + cB + ' ' + pct + '%,' + cB + ' ' + pct + '%,' + cA + ' ' + pct + '%,' + cA + ' 100%)';
+        }
       }
       if (costura) {
-        const mostrar = haySiguiente && wipe > 0 && wipe < 1;
-        costura.style.opacity = mostrar ? '1' : '0';
-        if (mostrar && sticky) {
+        costura.style.opacity = mostrarCostura ? '1' : '0';
+        if (mostrarCostura && sticky && cutRect) {
           // misma caja que usa el clip-path (.galeria-item-frame): "wipe *
           // altura de esta caja" da exactamente el borde del corte, sin
           // conversión entre cajas de referencia distintas.
-          const fr = frames[i + 1];
-          const r = fr.getBoundingClientRect();
           const s = sticky.getBoundingClientRect();
-          costura.style.top = (r.top - s.top + wipe * r.height) + 'px';
-          costura.style.left = (r.left - s.left) + 'px';
-          costura.style.width = r.width + 'px';
+          costura.style.top = (cutRect.top - s.top + wipe * cutRect.height) + 'px';
+          costura.style.left = (cutRect.left - s.left) + 'px';
+          costura.style.width = cutRect.width + 'px';
         }
       }
       if (idx !== idxActual) {
