@@ -508,7 +508,7 @@ const App = {
 
     if (this.caps && this.caps.length) {
       let idx = 0;
-      this.caps.forEach((s, n) => { if (y >= s.offsetTop - window.innerHeight * 0.45) idx = n; });
+      this.caps.forEach((s, n) => { if (y >= s.offsetTop - window.innerHeight * 0.15) idx = n; });
       if (idx !== this.capActual) {
         this.capActual = idx;
         this.mostrarCap(this.caps[idx]);
