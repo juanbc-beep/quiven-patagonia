@@ -1302,6 +1302,8 @@ const App = {
     const btnCerrar = q('[data-role="galeria-cerrar"]');
     const fondo = q('[data-role="galeria-fondo"]');
     const contador = q('[data-role="galeria-contador"]');
+    const costura = q('[data-role="galeria-costura"]');
+    const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
     const items = all('[data-role="galeria-item"]');
     if (!items.length) return;
@@ -1318,6 +1320,19 @@ const App = {
     // pero solo sobre la capa que en ese momento recibe punteros (idxActual)
     let tiltRX = 0, tiltRY = 0;
     const conTilt = !this.coarse && !this.reduced;
+
+    // mismo lenguaje visual que el separador de capítulos de La Historia:
+    // una costura fina + rombo, acá viajando por el borde de la cortina --
+    // todas las fotos comparten tamaño (68svh, 2:3), así que alcanza con
+    // medir una sola vez, no en cada frame de scroll
+    let costuraRect = null;
+    const medirCostura = () => {
+      const imgEl = items[0] && items[0].querySelector('img');
+      if (!imgEl || !sticky) { costuraRect = null; return; }
+      const r = imgEl.getBoundingClientRect();
+      const s = sticky.getBoundingClientRect();
+      costuraRect = { top: r.top - s.top, left: r.left - s.left, width: r.width, height: r.height };
+    };
 
     /* cada foto queda quieta la primera mitad de su tramo; en la segunda
        mitad una cortina sube desde abajo y recién ahí aparece la siguiente
@@ -1365,6 +1380,15 @@ const App = {
           ? mezclarColor(colores[i], colores[i + 1], wipe)
           : mezclarColor(colores[i], colores[i], 0);
       }
+      if (costura) {
+        const mostrar = haySiguiente && wipe > 0 && wipe < 1 && costuraRect;
+        costura.style.opacity = mostrar ? '1' : '0';
+        if (mostrar) {
+          costura.style.top = (costuraRect.top + wipe * costuraRect.height) + 'px';
+          costura.style.left = costuraRect.left + 'px';
+          costura.style.width = costuraRect.width + 'px';
+        }
+      }
       if (idx !== idxActual) {
         idxActual = idx;
         if (contador) contador.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
@@ -1386,6 +1410,7 @@ const App = {
       // esto, la foto que entra en la cortina todavía no cargó y no se ve nada
       // hasta que por fin decide bajarla sola. Al abrir, forzamos que bajen ya.
       items.forEach(it => { const img = it.querySelector('img'); if (img) img.loading = 'eager'; });
+      medirCostura();
       pintarGaleria();
       if (btnCerrar) btnCerrar.focus();
     };
@@ -1423,7 +1448,7 @@ const App = {
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); irAIndice((idxActual < 0 ? 0 : idxActual) + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); irAIndice((idxActual < 0 ? 0 : idxActual) - 1); }
     });
-    window.addEventListener('resize', () => { if (abierta) pintarGaleria(); });
+    window.addEventListener('resize', () => { if (abierta) { medirCostura(); pintarGaleria(); } });
   },
 
   toggleAudio() {

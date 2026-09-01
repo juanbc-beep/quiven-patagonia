@@ -397,27 +397,47 @@ button { font: inherit; }
 }
 /* separador entre capítulos: un fleurón chico centrado en el espacio entre
    uno y el siguiente -- la Historia ya se numera como capítulos (01/02/03),
-   esto lo hace visible como una pausa real, no solo un margen */
+   esto lo hace visible como una pausa real, no solo un margen. Se dibuja
+   solo al entrar en pantalla (misma clase .is-in que ya usan los reveals
+   de texto) y el rombo queda con un pulso sutil, como una brasa. */
 .hist-chapter:not(:last-child)::before {
   content: '';
   position: absolute;
   left: 50%;
   bottom: calc(-1 * clamp(32px, 5.5svh, 65px));
-  transform: translateX(-50%);
+  transform: translateX(-50%) scaleX(0);
+  transform-origin: center;
   width: 64px;
   height: 1px;
   background: rgba(224, 164, 95, 0.3);
+  transition: transform 0.9s cubic-bezier(.16, 1, .3, 1) 0.15s;
+}
+.hist-chapter.is-in:not(:last-child)::before {
+  transform: translateX(-50%) scaleX(1);
 }
 .hist-chapter:not(:last-child)::after {
   content: '';
   position: absolute;
   left: 50%;
   bottom: calc(-1 * clamp(32px, 5.5svh, 65px) - 3px);
-  transform: translateX(-50%) rotate(45deg);
+  transform: translateX(-50%) rotate(45deg) scale(0);
   width: 7px;
   height: 7px;
   background: #0d0b0a;
   border: 1px solid #c47b3e;
+  transition: transform 0.5s cubic-bezier(.16, 1, .3, 1) 0.5s;
+}
+.hist-chapter.is-in:not(:last-child)::after {
+  transform: translateX(-50%) rotate(45deg) scale(1);
+  animation: histFleuronPulso 3.2s ease-in-out 1.4s infinite;
+}
+@keyframes histFleuronPulso {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(196, 123, 62, 0); }
+  50% { box-shadow: 0 0 8px 2px rgba(196, 123, 62, 0.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hist-chapter:not(:last-child)::before { transition: none; transform: translateX(-50%) scaleX(1); }
+  .hist-chapter:not(:last-child)::after { transition: none; animation: none; transform: translateX(-50%) rotate(45deg) scale(1); }
 }
 .hist-chapter--reverse { grid-template-columns: 1fr minmax(260px, 47%); }
 .hist-chapter--reverse .hist-photo { order: 2; }
@@ -494,17 +514,18 @@ button { font: inherit; }
 /* ---------- placa de presentación del chef: nombre y rol, sin ambigüedad ---------- */
 .hist-chef-placa {
   display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 10px 14px;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
   margin-bottom: clamp(14px, 2.4svh, 22px);
   padding-bottom: clamp(12px, 2svh, 18px);
   border-bottom: 1px solid rgba(224, 164, 95, 0.25);
 }
 .hist-chef-nombre {
   font-family: 'Fraunces', serif;
-  font-weight: 400;
-  font-size: clamp(1.5rem, 3vw + 1svh, 2.1rem);
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(2.2rem, 4.6vw + 1.4svh, 3.4rem);
   color: #f2ece1;
   line-height: 1;
 }
@@ -825,6 +846,33 @@ button { font: inherit; }
   /* mismo preset del carrusel de El Menú de Pasos -- coherencia visual entre
      las fotos "de vidriera" del sitio, no cada una con su propio tratamiento */
   filter: saturate(1.05) contrast(1.03);
+}
+/* costura que viaja por el borde de la cortina al pasar de una foto a la
+   siguiente -- mismo lenguaje que el separador de capítulos de La Historia
+   (línea + rombo), acá en movimiento en vez de estático */
+.galeria-costura {
+  position: absolute;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(224, 164, 95, 0.9) 15%, rgba(224, 164, 95, 0.9) 85%, transparent);
+  box-shadow: 0 0 6px rgba(224, 164, 95, 0.5);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 3;
+  transition: opacity 0.25s ease;
+}
+.galeria-costura::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 7px;
+  height: 7px;
+  background: #0d0b0a;
+  border: 1px solid #e0a45f;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+@media (prefers-reduced-motion: reduce) {
+  .galeria-costura { transition: none; }
 }
 .galeria-hint {
   position: fixed;
