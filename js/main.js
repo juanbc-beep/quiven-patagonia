@@ -371,6 +371,7 @@ const App = {
     });
     App.pintar();
     App.iniciarAutoDescenso();
+    App.iniciarDescensoPorPasos();
   },
 
   /* si nadie scrollea, el descenso se cuenta solo -- se cancela para siempre
@@ -402,6 +403,91 @@ const App = {
       };
       requestAnimationFrame(paso);
     }, 2200);
+  },
+
+  /* El Descenso es scroll continuo puro: cada foto solo está en su punto
+     más visible durante una ventana muy angosta del recorrido (~2% del
+     total). Con un scroll o flick fuerte, esa ventana se salta entera
+     entre dos frames -- se pierde la pantalla completa, no solo se ve un
+     poco recortada. Acá cada gesto de rueda/swipe DENTRO de la zona del
+     Descenso avanza o retrocede un solo capítulo por vez (los mismos 5
+     puntos narrativos que ya usa el texto/altímetro, DESCENSO[].p), nunca
+     más de uno, así que ninguno queda sin mostrarse completo. Apenas se
+     sale de la zona (para arriba en el primer capítulo, para abajo en el
+     último) se deja de interceptar y el scroll de la página sigue libre
+     como siempre -- el resto del sitio no se entera de que esto existe. */
+  iniciarDescensoPorPasos() {
+    const zona = q('[data-role="descenso"]');
+    if (!zona) return;
+    let bloqueado = false;
+    let desturaque = null;
+
+    const geom = () => ({
+      top: zona.offsetTop,
+      alto: Math.max(1, zona.offsetHeight - window.innerHeight)
+    });
+    const yActual = () => window.scrollY || document.documentElement.scrollTop;
+    const estadoActual = () => {
+      const { top, alto } = geom();
+      const p = clamp((yActual() - top) / alto, 0, 1);
+      let etapa = 0;
+      DESCENSO.forEach((d, i) => { if (p >= d.p - 0.001) etapa = i; });
+      return { p, etapa, top, alto };
+    };
+    // no interceptar si hay un overlay bloqueando el scroll de fondo
+    // (galería abierta, portal) -- esa zona vive en otra capa, no acá
+    const zonaLibre = () => document.documentElement.style.overflow !== 'hidden';
+    const dentroDeZona = () => {
+      const { top, alto } = geom();
+      const y = yActual();
+      return y >= top - 2 && y <= top + alto + 2;
+    };
+
+    const irAEtapa = i => {
+      const { top, alto } = geom();
+      const destino = top + DESCENSO[i].p * alto;
+      bloqueado = true;
+      window.scrollTo({ top: destino, behavior: App.reduced ? 'auto' : 'smooth' });
+      clearTimeout(desturaque);
+      desturaque = setTimeout(() => { bloqueado = false; }, 900);
+    };
+    window.addEventListener('scrollend', () => {
+      bloqueado = false;
+      clearTimeout(desturaque);
+    });
+
+    // wheel/swipe hacia abajo -> el capítulo siguiente; hacia arriba -> el
+    // anterior. En el primer/último capítulo, según el sentido, se deja
+    // pasar el gesto sin tocarlo (return false) y el scroll normal retoma.
+    const manejar = direccion => {
+      if (bloqueado || !zonaLibre() || !dentroDeZona()) return false;
+      const { etapa } = estadoActual();
+      if (direccion > 0) {
+        if (etapa >= DESCENSO.length - 1) return false;
+        irAEtapa(etapa + 1);
+      } else {
+        if (etapa <= 0) return false;
+        irAEtapa(etapa - 1);
+      }
+      return true;
+    };
+
+    window.addEventListener('wheel', e => {
+      if (Math.abs(e.deltaY) < 2) return;
+      if (manejar(e.deltaY > 0 ? 1 : -1)) e.preventDefault();
+    }, { passive: false });
+
+    let tY0 = null;
+    window.addEventListener('touchstart', e => { tY0 = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener('touchmove', e => {
+      if (tY0 == null || bloqueado || !zonaLibre() || !dentroDeZona()) return;
+      const dy = tY0 - e.touches[0].clientY;
+      // umbral: un roce chico no cuenta como intención de cambiar de capítulo
+      if (Math.abs(dy) < 42) return;
+      const dir = dy > 0 ? 1 : -1;
+      tY0 = null;
+      if (manejar(dir)) e.preventDefault();
+    }, { passive: false });
   },
 
   /* ---------- sello: 36 marcas ---------- */
