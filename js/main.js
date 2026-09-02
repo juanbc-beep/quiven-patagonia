@@ -306,8 +306,12 @@ const App = {
     const p = q('[data-role="portal"]');
     const v = q('[data-role="portal-video"]');
     if (v && this.datosLimitados) {
-      // conexión lenta / ahorro de datos: se queda con la foto, no baja el video
-      v.removeAttribute('src'); v.load(); v.style.display = 'none';
+      // conexión lenta / ahorro de datos: se queda con la foto, no baja el
+      // video -- display:none acá escondía el <video> ENTERO, poster
+      // incluido, dejando la pantalla en negro sólido en vez de la foto.
+      // El poster ya se muestra solo con no tener src que reproducir, no
+      // hace falta (ni conviene) esconder el elemento.
+      v.removeAttribute('src'); v.load();
     } else if (v) {
       v.muted = true; v.defaultMuted = true;
       const arrancar = () => { const pr = v.play(); if (pr && pr.catch) pr.catch(() => {}); };
