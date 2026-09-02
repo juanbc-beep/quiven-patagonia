@@ -161,10 +161,16 @@ button { font: inherit; }
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.4);
 }
 .btn-reservar-mesa {
+  background: var(--dorado-oscuro);
+  color: var(--negro-1);
   transition: background .3s ease, transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s ease;
 }
 .btn-reservar-mesa:hover {
   background: var(--dorado);
+  /* sin esto, la regla genérica "a:hover { color: var(--dorado) }" gana por
+     especificidad y el texto se vuelve dorado sobre un fondo que también se
+     vuelve dorado -- el bug de contraste real que encontró la auditoría. */
+  color: var(--negro-1);
   transform: translateY(-3px);
   box-shadow: 0 14px 32px rgb(var(--dorado-oscuro-rgb) / 0.35);
 }
@@ -626,11 +632,11 @@ button { font: inherit; }
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
-  font-size: 1.7em;
+  font-size: 3em;
   line-height: 0;
-  margin-left: 0.06em;
-  vertical-align: -0.22em;
-  color: rgb(var(--dorado-rgb) / 0.4);
+  margin-left: 0.04em;
+  vertical-align: -0.28em;
+  color: rgb(var(--dorado-rgb) / 0.16);
   pointer-events: none;
   user-select: none;
 }
