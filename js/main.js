@@ -410,17 +410,26 @@ const App = {
      total). Con un scroll o flick fuerte, esa ventana se salta entera
      entre dos frames -- se pierde la pantalla completa, no solo se ve un
      poco recortada. Acá cada gesto de rueda/swipe DENTRO de la zona del
-     Descenso avanza o retrocede un solo capítulo por vez (los mismos 5
-     puntos narrativos que ya usa el texto/altímetro, DESCENSO[].p), nunca
-     más de uno, así que ninguno queda sin mostrarse completo. Apenas se
-     sale de la zona (para arriba en el primer capítulo, para abajo en el
-     último) se deja de interceptar y el scroll de la página sigue libre
-     como siempre -- el resto del sitio no se entera de que esto existe. */
+     Descenso avanza o retrocede un solo capítulo por vez, nunca más de
+     uno, así que ninguno queda sin mostrarse completo. Apenas se sale de
+     la zona (para arriba en el primer capítulo, para abajo en el último)
+     se deja de interceptar y el scroll de la página sigue libre como
+     siempre -- el resto del sitio no se entera de que esto existe.
+
+     Los puntos de destino NO son el mismo DESCENSO[].p que usa el texto:
+     el texto cambia un poco ANTES de que la foto de esa etapa termine de
+     aparecer (a propósito, para el scroll continuo original), así que
+     aterrizar justo en DESCENSO[i].p dejaba la foto a mitad de fundido --
+     título ya cambiado, foto todavía transparentándose. P_PASOS apunta al
+     CENTRO de la ventana en la que cada foto está 100% opaca (ver los
+     mismos números en pintarDescenso: capas d-1..d-4 y sus umbrales de
+     entra/sale) -- ahí el título YA cambió (los umbrales de DESCENSO cruzan
+     antes) y la foto YA está formada del todo. */
   iniciarDescensoPorPasos() {
     const zona = q('[data-role="descenso"]');
     if (!zona) return;
+    const P_PASOS = [0, 0.37, 0.55, 0.73, 0.95];
     let bloqueado = false;
-    let desturaque = null;
 
     const geom = () => ({
       top: zona.offsetTop,
@@ -443,18 +452,28 @@ const App = {
       return y >= top - 2 && y <= top + alto + 2;
     };
 
+    // tween propio en vez de scrollTo({behavior:'smooth'}) -- el smooth
+    // nativo del navegador no permite fijar la duración, y en algunos
+    // navegadores se estira bastante para este salto (~500-900px), dejando
+    // el crossfade de opacidad (atado 1:1 al scroll) sintiéndose lento y
+    // "blando" en vez de un cambio de foto rápido y decidido.
     const irAEtapa = i => {
       const { top, alto } = geom();
-      const destino = top + DESCENSO[i].p * alto;
+      const destino = top + P_PASOS[i] * alto;
+      if (App.reduced) { window.scrollTo(0, destino); return; }
       bloqueado = true;
-      window.scrollTo({ top: destino, behavior: App.reduced ? 'auto' : 'smooth' });
-      clearTimeout(desturaque);
-      desturaque = setTimeout(() => { bloqueado = false; }, 900);
+      const y0 = yActual();
+      const dur = 380;
+      const inicio = performance.now();
+      const paso = now => {
+        const t = clamp((now - inicio) / dur, 0, 1);
+        const ease = 1 - Math.pow(1 - t, 3);
+        window.scrollTo(0, y0 + (destino - y0) * ease);
+        if (t < 1) requestAnimationFrame(paso);
+        else bloqueado = false;
+      };
+      requestAnimationFrame(paso);
     };
-    window.addEventListener('scrollend', () => {
-      bloqueado = false;
-      clearTimeout(desturaque);
-    });
 
     // wheel/swipe hacia abajo -> el capítulo siguiente; hacia arriba -> el
     // anterior. En el primer/último capítulo, según el sentido, se deja
@@ -939,7 +958,7 @@ const App = {
       fila.type = 'button';
       fila.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;gap:14px;background:none;border:none;border-bottom:1px solid rgba(242,236,225,0.09);padding:12px 0;cursor:pointer;text-align:left;color:#8d7f70;font-family:inherit;font-weight:300;transition:color .35s ease';
       const izq = document.createElement('span');
-      izq.style.cssText = "font-family:'Fraunces',serif;font-size:0.95rem";
+      izq.style.cssText = "font-family:'Piazzolla',serif;font-size:0.95rem";
       izq.textContent = '0' + (i + 1) + ' · ' + e.n;
       const der = document.createElement('span');
       der.style.cssText = 'font-size:0.6875rem;letter-spacing:0.16em;text-align:right';
@@ -1035,7 +1054,7 @@ const App = {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = m[0];
-      b.style.cssText = "background:none;border:1px solid rgba(242,236,225,0.16);color:#8d7f70;font-family:'Fraunces',serif;font-size:0.8rem;letter-spacing:0.06em;padding:13px 13px;border-radius:999px;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1)";
+      b.style.cssText = "background:none;border:1px solid rgba(242,236,225,0.16);color:#8d7f70;font-family:'Piazzolla',serif;font-size:0.8rem;letter-spacing:0.06em;padding:13px 13px;border-radius:999px;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1)";
       const act = () => { this.setMomento(i); this.ciclarMomento(); };
       b.addEventListener('click', act);
       if (!this.coarse) b.addEventListener('mouseenter', act);
@@ -1131,7 +1150,7 @@ const App = {
       f.type = 'button';
       f.style.cssText = 'display:flex;align-items:baseline;justify-content:space-between;gap:14px;background:none;border:none;border-bottom:1px solid rgba(242,236,225,0.09);padding:11px 0;cursor:pointer;text-align:left;color:#8d7f70;font-family:inherit;font-weight:300;transition:color .35s ease,transform .35s cubic-bezier(.16,1,.3,1)';
       const a = document.createElement('span');
-      a.style.cssText = "font-family:'Fraunces',serif;font-size:0.92rem";
+      a.style.cssText = "font-family:'Piazzolla',serif;font-size:0.92rem";
       a.textContent = '0' + (i + 1) + ' · ' + p.n;
       const b = document.createElement('span');
       b.style.cssText = 'font-size:0.78rem;letter-spacing:0.03em;font-variant-caps:small-caps';
@@ -1402,10 +1421,10 @@ const App = {
       const d = document.createElement('div');
       d.style.cssText = 'flex:0 0 auto;width:min(78vw,400px);border:1px solid rgba(242,236,225,0.12);background:#0d0b0a;padding:24px 26px;border-radius:2px;display:flex;flex-direction:column;gap:14px;transition:border-color .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
       const sello = document.createElement('span');
-      sello.style.cssText = "width:26px;height:26px;border-radius:50%;border:1px solid rgba(224,164,95,0.5);display:flex;align-items:center;justify-content:center;font-family:'Fraunces',serif;font-size:0.6rem;color:#e0a45f;flex:0 0 auto";
+      sello.style.cssText = "width:26px;height:26px;border-radius:50%;border:1px solid rgba(224,164,95,0.5);display:flex;align-items:center;justify-content:center;font-family:'Piazzolla',serif;font-size:0.6rem;color:#e0a45f;flex:0 0 auto";
       sello.textContent = String(i + 1);
       const p = document.createElement('p');
-      p.style.cssText = "margin:0;font-family:'Fraunces',serif;font-style:italic;font-size:clamp(0.94rem,2.6vw,1.14rem);line-height:1.5;color:#f2ece1";
+      p.style.cssText = "margin:0;font-family:'Piazzolla',serif;font-style:italic;font-size:clamp(0.94rem,2.6vw,1.14rem);line-height:1.5;color:#f2ece1";
       p.textContent = '«' + c[0] + '»';
       const s = document.createElement('span');
       s.style.cssText = 'font-size:0.6875rem;letter-spacing:0.14em;color:#8d7f70';
