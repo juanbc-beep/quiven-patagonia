@@ -156,6 +156,9 @@ const App = {
     this._dP = undefined;
     this.pintarDescenso(window.scrollY || document.documentElement.scrollTop || 0);
     if (this.capActual != null && this.caps) this.mostrarCap(this.caps[this.capActual]);
+    // ES/EN no ocupan el mismo alto de texto -- el offsetTop cacheado de
+    // cada sección puede haber corrido con el cambio de idioma.
+    this._capsTops = null;
   },
 
   componentDidMount() {
@@ -186,9 +189,13 @@ const App = {
     let tResize;
     this.onResize = () => {
       clearTimeout(tResize);
-      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this.pintar(); }, 150);
+      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this._paraDatos = undefined; this._capsTops = null; this.pintar(); }, 150);
     };
     window.addEventListener('resize', this.onResize);
+    // fuentes/imágenes que terminan de cargar después del primer pintado
+    // pueden correr el alto de una sección -- se invalida una vez más acá
+    // para no quedar con el offsetTop cacheado de antes de que todo asiente.
+    window.addEventListener('load', () => { this._capsTops = null; }, { once: true });
 
     // si un video de fondo falla (red, códec no soportado, archivo corrupto),
     // el navegador ya se apoya solo en el poster -- lo pinta el propio <video>,
@@ -506,49 +513,64 @@ const App = {
   },
 
   pintar() {
+    // estos elementos se resuelven una sola vez y se cachean -- antes se
+    // hacían 6-7 querySelector nuevos en CADA scroll tick, para toda la vida
+    // de la página (no solo en el Descenso), aunque ninguno de estos
+    // elementos aparece ni desaparece del DOM nunca.
+    if (this._pEls === undefined) {
+      this._pEls = {
+        hiloFill: q('[data-role="hilo-fill"]'),
+        hiloBrasa: q('[data-role="hilo-brasa"]'),
+        movilFill: q('[data-role="movil-fill"]'),
+        arriba: q('[data-role="volver-arriba"]'),
+        nav: q('[data-role="nav"]'),
+        grano: q('[data-role="grano"]')
+      };
+    }
+    const pe = this._pEls;
     const doc = document.documentElement;
     const max = Math.max(1, doc.scrollHeight - window.innerHeight);
     const y = window.scrollY || doc.scrollTop;
     const r = clamp(y / max, 0, 1);
 
-    const fill = q('[data-role="hilo-fill"]');
-    const brasa = q('[data-role="hilo-brasa"]');
-    if (fill) fill.style.height = (r * 100) + '%';
-    if (brasa) brasa.style.top = 'calc(' + (r * 100) + '% - 3px)';
-    const mf = q('[data-role="movil-fill"]');
-    if (mf) mf.style.width = (r * 100) + '%';
+    if (pe.hiloFill) pe.hiloFill.style.height = (r * 100) + '%';
+    if (pe.hiloBrasa) pe.hiloBrasa.style.top = 'calc(' + (r * 100) + '% - 3px)';
+    if (pe.movilFill) pe.movilFill.style.width = (r * 100) + '%';
 
-    const arriba = q('[data-role="volver-arriba"]');
-    if (arriba) arriba.classList.toggle('is-visible', y > window.innerHeight);
+    if (pe.arriba) pe.arriba.classList.toggle('is-visible', y > window.innerHeight);
 
     if (this.caps && this.caps.length) {
+      // el offsetTop de cada sección se cachea -- leerlo de las 8 secciones
+      // en cada scroll tick fuerza layout aunque ninguna cambió de alto
+      // desde el último frame. Se invalida en resize, cambio de idioma
+      // (el texto ES/EN no mide igual) y en "load" (por si algo termina de
+      // acomodar el layout después de la carga inicial).
+      if (!this._capsTops) this._capsTops = this.caps.map(s => s.offsetTop);
       let idx = 0;
-      this.caps.forEach((s, n) => { if (y >= s.offsetTop - window.innerHeight * 0.15) idx = n; });
+      this._capsTops.forEach((top, n) => { if (y >= top - window.innerHeight * 0.15) idx = n; });
       if (idx !== this.capActual) {
         this.capActual = idx;
         this.mostrarCap(this.caps[idx]);
       }
     }
 
-    const nav = q('[data-role="nav"]');
-    if (nav) {
+    if (pe.nav) {
       // backdrop-filter es de lo más caro de togglear -- reescribirlo en cada
       // scroll tick aunque el estado no haya cambiado fuerza una revisión de
       // repintado igual. Solo se toca el DOM cuando "sólido" realmente cambia.
       const solido = y > window.innerHeight * 0.6;
       if (solido !== this._navSolido) {
         this._navSolido = solido;
-        nav.style.backgroundColor = solido ? 'rgba(5,6,10,0.72)' : 'transparent';
-        nav.style.backdropFilter = solido ? 'blur(14px)' : 'none';
+        pe.nav.style.backgroundColor = solido ? 'rgba(5,6,10,0.72)' : 'transparent';
+        pe.nav.style.backdropFilter = solido ? 'blur(14px)' : 'none';
       }
     }
 
     this.parallax(y);
     this.pintarDescenso(y);
-    const granoEl = q('[data-role="grano"]');
-    if (granoEl) {
+    if (pe.grano) {
       const base = PROPS.grano != null ? PROPS.grano : 0.05;
-      granoEl.style.opacity = String(base + (this.granoAvance || 0) * 0.15);
+      pe.grano.style.opacity = String(base + (this.granoAvance || 0) * 0.15);
     }
   },
 
@@ -580,18 +602,22 @@ const App = {
 
   parallax(y) {
     if (this.reduced || this.chico) return;
-    // primero se leen todos los offsetTop, recién después se escriben los
-    // transform -- alternar lectura/escritura por elemento fuerza un reflow
-    // síncrono por cada uno (layout thrashing), acá son pocos elementos pero
-    // el patrón es el mismo que castigaría mucho más si se agregan más
-    const datos = all('[data-parallax]').map(el => {
-      const sec = el.closest('[data-cap]');
-      return sec ? { el, top: sec.offsetTop } : null;
-    }).filter(Boolean);
-    datos.forEach(d => {
+    // la lista de elementos y su offsetTop se resuelven una sola vez y se
+    // cachean, invalidados solo en resize -- antes esto hacía un
+    // querySelectorAll('[data-parallax]') + closest() + offsetTop (lectura
+    // de layout) en CADA scroll tick, para toda la vida de la página, para
+    // parallaxear un solo video que casi siempre está lejos de la vista
+    // (incluida toda la sección de Descenso, arriba de todo).
+    if (this._paraDatos === undefined) {
+      this._paraDatos = all('[data-parallax]').map(el => {
+        const sec = el.closest('[data-cap]');
+        return sec ? { el, top: sec.offsetTop, factor: parseFloat(el.dataset.parallax) } : null;
+      }).filter(Boolean);
+    }
+    this._paraDatos.forEach(d => {
       const rel = (y - d.top) / Math.max(1, window.innerHeight);
       if (Math.abs(rel) > 1.6) return;
-      d.el.style.transform = 'translate3d(0,' + (rel * parseFloat(d.el.dataset.parallax) * 190) + 'px,0)';
+      d.el.style.transform = 'translate3d(0,' + (rel * d.factor * 190) + 'px,0)';
     });
   },
 
