@@ -937,40 +937,66 @@ button { font: inherit; }
     transition: none;
   }
 }
-.galeria-item-frame {
+.galeria-item-photo {
   /* las 14 fotos miden todas lo mismo -- 2:3, la relación que ya tenía la
      mayoría; las pocas que no, se recortaron aparte para la galería (ver
      galeria-810/e4134/825.webp). Nada de "cada una a su propio tamaño".
-     El clip-path del wipe va acá, no en .galeria-item: este marco tiene
-     el mismo tamaño exacto que la foto (sin el padding de pantalla
-     completa de .galeria-item), así el corte coincide con el borde
-     visible de la foto en TODO el recorrido del wipe, no solo a la mitad. */
+     El tamaño vive acá (no en .galeria-item-frame de adentro) para que el
+     sello, que tiene que asomar medio afuera de la foto, no quede cortado
+     por el overflow:hidden que sí necesita el marco para el wipe. */
   position: relative;
   width: auto;
-  height: 68svh;
+  height: 62svh;
   aspect-ratio: 2 / 3;
   max-width: 78vw;
+  /* sin esto, el flexbox de .galeria-item achica la foto una cantidad
+     DISTINTA en cada plato según cuánto texto tenga el nombre/descripción
+     de ESE plato en particular (nombre más largo = más líneas = menos
+     alto disponible = foto más chica) -- exactamente lo que hacía que
+     la foto 1 y la 14 se vieran más chicas que el resto. flex-shrink:0
+     + un alto de base con más margen (62svh en vez de 68svh, para dejar
+     lugar real al bloque de texto que ahora es más alto) garantiza que
+     las 14 fotos midan siempre lo mismo, sin importar el texto de cada una. */
+  flex-shrink: 0;
+}
+.galeria-item-frame {
+  /* el clip-path del wipe va acá: este marco tiene el mismo tamaño exacto
+     que la foto, así el corte coincide con el borde visible de la foto en
+     TODO el recorrido del wipe, no solo a la mitad. */
+  position: relative;
+  width: 100%;
+  height: 100%;
   border-radius: 2px;
   overflow: hidden;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
 }
-/* sello de la casa, como en la contratapa de una carta -- mismo círculo que
-   gira en el nav, acá quieto y estampado sobre la foto. Va dentro del marco
-   (no como elemento aparte) a propósito: se revela y se tapa junto con la
-   foto en el wipe, como si estuviera impreso en el papel, no flotando
-   encima. */
-.galeria-item-frame::after {
-  content: '';
+/* sello de la casa, como en la contratapa de una carta antigua: tinta
+   blanco y negro, no el círculo a color -- y estampado en una punta, mitad
+   sobre la foto y mitad afuera, no flotando prolijo en una esquina interna.
+   Va en .galeria-item-photo (sin overflow:hidden), no en .galeria-item-frame,
+   así la mitad que sale no se corta. */
+.galeria-item-sello {
   position: absolute;
-  right: 14px;
-  bottom: 14px;
-  width: clamp(32px, 5vw, 42px);
-  height: clamp(32px, 5vw, 42px);
+  top: -11px;
+  right: -11px;
+  width: clamp(38px, 5.6vw, 50px);
+  height: clamp(38px, 5.6vw, 50px);
   background: url('../assets/img/logo-circulo.webp') center / cover no-repeat;
+  filter: grayscale(1) contrast(1.6) brightness(1.15);
   border-radius: 50%;
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(224, 164, 95, 0.4);
-  opacity: 0.92;
+  box-shadow: 0 0 0 2px rgba(242, 236, 225, 0.88), 0 3px 10px rgba(0, 0, 0, 0.55);
+  transform: rotate(-8deg);
   pointer-events: none;
+  z-index: 2;
+  /* fuera del clip-path del wipe (ver nota arriba) -- sin este propio fade
+     aparecía de golpe apenas la próxima foto pasaba a opacity:1, aunque
+     todavía estuviera 100% tapada. Se muestra recién cuando esa foto queda
+     asentada como la actual. */
+  opacity: 0;
+  transition: opacity 0.4s ease .15s;
+}
+.galeria-item-photo.is-asentado .galeria-item-sello {
+  opacity: 1;
 }
 .galeria-item img {
   display: block;
@@ -1024,7 +1050,8 @@ button { font: inherit; }
   .galeria-item { transition: opacity 0.3s ease; }
 }
 @media (max-width: 700px) {
-  .galeria-item-frame { max-width: 88vw; max-height: 58svh; }
+  .galeria-item-photo { max-width: 88vw; max-height: 55svh; }
+  .galeria-item-sello { top: -9px; right: -9px; width: clamp(32px, 8vw, 40px); height: clamp(32px, 8vw, 40px); }
   .galeria-info { max-width: 88vw; }
   .galeria-num { font-size: 0.62rem; }
   .galeria-nombre { font-size: clamp(1.2rem, 6.4vw, 1.5rem); }

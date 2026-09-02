@@ -1423,6 +1423,7 @@ const App = {
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
     const nombres = items.map(it => it.querySelector('.galeria-info'));
+    const fotos = items.map(it => it.querySelector('.galeria-item-photo'));
     const numEls = items.map(it => it.querySelector('.galeria-num'));
     // "PLATO 07 · DE 14" -- mismo lenguaje que "PASO 01 · DE 05" en El Menú
     // de Pasos, para que la galería se lea como parte del mismo sistema de
@@ -1567,6 +1568,13 @@ const App = {
         // juntos, vía transition-delay en CSS -- no hace falta más trabajo
         // por frame acá, un solo toggle de clase alcanza.
         nombres.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
+        // el sello vive en .galeria-item-photo (fuera del clip-path del
+        // wipe, necesario para que la mitad que sale de la foto no se
+        // corte) -- sin este mismo toggle aparecía de golpe apenas la
+        // FIGURA de la próxima foto pasaba a opacity:1, aunque su foto
+        // todavía estuviera 100% tapada por el clip-path. Ahora solo se ve
+        // en el plato que ya quedó asentado como el actual.
+        fotos.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
       }
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(pintarGaleria); };
