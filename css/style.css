@@ -910,6 +910,33 @@ button { font: inherit; }
   color: #cbbca9;
   text-wrap: pretty;
 }
+/* reveal escalonado: el bloque entero ya se desvanece con el wipe (arriba),
+   esto suma un gesto extra solo cuando el plato queda asentado como el
+   actual -- número, nombre, zona y frase entran uno detrás del otro en vez
+   de todos juntos, como en los reveals de La Historia y El Menú de Pasos. */
+.galeria-num,
+.galeria-nombre,
+.galeria-zona,
+.galeria-desc {
+  transform: translateY(10px);
+  transition: transform 0.55s cubic-bezier(.16, 1, .3, 1);
+}
+.galeria-info.is-asentado .galeria-num { transition-delay: 0s; }
+.galeria-info.is-asentado .galeria-nombre { transition-delay: .08s; }
+.galeria-info.is-asentado .galeria-zona { transition-delay: .16s; }
+.galeria-info.is-asentado .galeria-desc { transition-delay: .22s; }
+.galeria-info.is-asentado .galeria-num,
+.galeria-info.is-asentado .galeria-nombre,
+.galeria-info.is-asentado .galeria-zona,
+.galeria-info.is-asentado .galeria-desc {
+  transform: translateY(0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .galeria-num, .galeria-nombre, .galeria-zona, .galeria-desc {
+    transform: none;
+    transition: none;
+  }
+}
 .galeria-item-frame {
   /* las 14 fotos miden todas lo mismo -- 2:3, la relación que ya tenía la
      mayoría; las pocas que no, se recortaron aparte para la galería (ver
@@ -926,6 +953,24 @@ button { font: inherit; }
   border-radius: 2px;
   overflow: hidden;
   box-shadow: 0 40px 100px rgba(0, 0, 0, 0.55);
+}
+/* sello de la casa, como en la contratapa de una carta -- mismo círculo que
+   gira en el nav, acá quieto y estampado sobre la foto. Va dentro del marco
+   (no como elemento aparte) a propósito: se revela y se tapa junto con la
+   foto en el wipe, como si estuviera impreso en el papel, no flotando
+   encima. */
+.galeria-item-frame::after {
+  content: '';
+  position: absolute;
+  right: 14px;
+  bottom: 14px;
+  width: clamp(32px, 5vw, 42px);
+  height: clamp(32px, 5vw, 42px);
+  background: url('../assets/img/logo-circulo.webp') center / cover no-repeat;
+  border-radius: 50%;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(224, 164, 95, 0.4);
+  opacity: 0.92;
+  pointer-events: none;
 }
 .galeria-item img {
   display: block;

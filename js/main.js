@@ -1561,6 +1561,12 @@ const App = {
       if (idx !== idxActual) {
         idxActual = idx;
         if (contador) contador.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
+        // el bloque de texto ya se desvanece con el wipe (arriba); esto suma
+        // un gesto extra solo cuando el plato queda asentado como el actual:
+        // número, nombre, zona y frase entran escalonados en vez de todos
+        // juntos, vía transition-delay en CSS -- no hace falta más trabajo
+        // por frame acá, un solo toggle de clase alcanza.
+        nombres.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
       }
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(pintarGaleria); };
