@@ -1531,9 +1531,12 @@ const App = {
           // altura de esta caja" da exactamente el borde del corte, sin
           // conversión entre cajas de referencia distintas.
           const s = sticky.getBoundingClientRect();
+          // el ancho ahora es el de la pantalla completa (igual que el corte
+          // de color de fondo), no el de la foto sola -- así ambos elementos
+          // quedan leídos como un mismo sistema, de punta a punta.
           costura.style.top = (cutRect.top - s.top + wipe * cutRect.height) + 'px';
-          costura.style.left = (cutRect.left - s.left) + 'px';
-          costura.style.width = cutRect.width + 'px';
+          costura.style.left = '0px';
+          costura.style.width = s.width + 'px';
         }
       }
       if (idx !== idxActual) {
