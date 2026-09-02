@@ -868,13 +868,19 @@ button { font: inherit; }
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* flex-start, no center: con center, el bloque foto+texto se centra COMO
+     UNIDAD, así que el alto del texto (que varía de un plato a otro según
+     cuánto ocupe nombre/zona/descripción) corría la foto hacia arriba o
+     abajo según cuánto texto tuviera ESE plato en particular -- la foto
+     quedaba en una posición distinta en cada plato. Con flex-start la foto
+     arranca siempre en el mismo punto fijo (justo después del padding), y
+     el texto crece hacia abajo sin moverla. */
+  justify-content: flex-start;
   gap: clamp(14px, 2.2svh, 22px);
   padding: clamp(90px, 14svh, 140px) clamp(24px, 6vw, 90px) clamp(60px, 10svh, 100px);
   opacity: 0;
   pointer-events: none;
-  will-change: opacity, clip-path, transform;
-  transition: transform 0.4s cubic-bezier(.16, 1, .3, 1);
+  will-change: opacity, clip-path;
 }
 /* nombre + descripción del plato: misma jerarquía que "El Menú de Pasos"
    (paso-titulo/paso-texto) -- título grande en Fraunces, cuerpo chico
@@ -1005,8 +1011,11 @@ button { font: inherit; }
 /* sello de la casa, como en la contratapa de una carta antigua: tinta
    blanco y negro, no el círculo a color -- y estampado en una punta, mitad
    sobre la foto y mitad afuera, no flotando prolijo en una esquina interna.
-   Va en .galeria-item-photo (sin overflow:hidden), no en .galeria-item-frame,
-   así la mitad que sale no se corta. */
+   Es UNO SOLO para toda la galería (ver .galeria-sello-fijo más abajo), no
+   uno por plato: iba y venía con cada transición, con su propio fundido,
+   y esa repetición constante rompía el flujo de la lectura en vez de leerse
+   como un sello real, que no se mueve. Acá queda totalmente estático, sin
+   transición ni toggle. */
 .galeria-item-sello {
   position: absolute;
   top: -11px;
@@ -1019,16 +1028,23 @@ button { font: inherit; }
   box-shadow: 0 0 0 2px rgba(242, 236, 225, 0.88), 0 3px 10px rgba(0, 0, 0, 0.55);
   transform: rotate(-8deg);
   pointer-events: none;
-  z-index: 2;
-  /* fuera del clip-path del wipe (ver nota arriba) -- sin este propio fade
-     aparecía de golpe apenas la próxima foto pasaba a opacity:1, aunque
-     todavía estuviera 100% tapada. Se muestra recién cuando esa foto queda
-     asentada como la actual. */
-  opacity: 0;
-  transition: opacity 0.4s ease .15s;
 }
-.galeria-item-photo.is-asentado .galeria-item-sello {
-  opacity: 1;
+/* envoltorio invisible con el MISMO box-model que .galeria-item-photo
+   (mismo padding exterior que .galeria-item, misma altura/aspect-ratio de
+   foto) -- así el sello cae exactamente en la misma esquina que ocuparía
+   en cualquiera de los 14 platos, sin medir nada por JS ni repetirlo por
+   cada figure. Va por encima de todas las capas (z-index más alto que
+   cualquier .galeria-item) y no reacciona al scroll ni al wipe. */
+.galeria-sello-fijo {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: clamp(90px, 14svh, 140px) clamp(24px, 6vw, 90px) clamp(60px, 10svh, 100px);
+  pointer-events: none;
+  z-index: 5;
 }
 .galeria-item img {
   display: block;

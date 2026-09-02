@@ -1423,7 +1423,6 @@ const App = {
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
     const nombres = items.map(it => it.querySelector('.galeria-info'));
-    const fotos = items.map(it => it.querySelector('.galeria-item-photo'));
     const numEls = items.map(it => it.querySelector('.galeria-num'));
     // "PLATO 07 · DE 14" -- mismo lenguaje que "PASO 01 · DE 05" en El Menú
     // de Pasos, para que la galería se lea como parte del mismo sistema de
@@ -1444,11 +1443,6 @@ const App = {
       const hex = (it.dataset.color || '#0d0b0a').replace('#', '');
       return [parseInt(hex.slice(0, 2), 16), parseInt(hex.slice(2, 4), 16), parseInt(hex.slice(4, 6), 16)];
     });
-
-    // mismo lenguaje del resto del sitio: leve inclinación 3D con el mouse,
-    // pero solo sobre la capa que en ese momento recibe punteros (idxActual)
-    let tiltRX = 0, tiltRY = 0;
-    const conTilt = !this.coarse && !this.reduced;
 
     // mismo lenguaje visual que el separador de capítulos de La Historia:
     // una costura fina + rombo, acá viajando por el borde de la cortina.
@@ -1483,9 +1477,16 @@ const App = {
       const wipe = haySiguiente ? clamp((frac - 0.5) / 0.5, 0, 1) : 0;
       const idx = wipe > 0.5 && haySiguiente ? i + 1 : i;
 
-      const transformCapa = n2 => (conTilt && n2 === idx)
-        ? 'rotateX(' + tiltRX + 'deg) rotateY(' + tiltRY + 'deg) scale(1.015)'
-        : 'scale(1)';
+      // antes la foto que quedaba asentada como "idx" recibía scale(1.015)
+      // apenas se asentaba -- como .galeria-item tenía transition:transform
+      // 0.4s, eso se veía como que la foto arrancaba un poco más chica y
+      // crecía en cada transición, dejando ver el marco/sombra de la capa
+      // de atrás en el borde durante ese crecimiento. El sitio tampoco
+      // tiene perspective en ningún ancestro de la galería, así que el
+      // rotateX/rotateY que acompañaba al scale ya no se veía -- el único
+      // efecto visible de todo el mecanismo era justamente ese "pop" de
+      // tamaño. Se saca por completo: la foto ahora queda fija en tamaño
+      // en todo momento, sin transform.
       items.forEach((it, n2) => {
         const fr = frames[n2];
         const nom = nombres[n2];
@@ -1495,7 +1496,6 @@ const App = {
           // el nombre acompaña la costura: se apaga a medida que la próxima
           // foto lo tapa, en vez de desaparecer de golpe
           if (nom) nom.style.opacity = String(1 - wipe);
-          it.style.transform = transformCapa(n2);
           it.style.zIndex = '1';
           it.style.pointerEvents = idx === i ? 'auto' : 'none';
         } else if (haySiguiente && n2 === i + 1) {
@@ -1507,7 +1507,6 @@ const App = {
           // el nombre del plato que entra se revela con el mismo ritmo que
           // la foto, no de golpe: la costura "trae" ambas cosas juntas
           if (nom) nom.style.opacity = String(wipe);
-          it.style.transform = transformCapa(n2);
           it.style.zIndex = '2';
           it.style.pointerEvents = idx === i + 1 ? 'auto' : 'none';
         } else {
@@ -1568,13 +1567,6 @@ const App = {
         // juntos, vía transition-delay en CSS -- no hace falta más trabajo
         // por frame acá, un solo toggle de clase alcanza.
         nombres.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
-        // el sello vive en .galeria-item-photo (fuera del clip-path del
-        // wipe, necesario para que la mitad que sale de la foto no se
-        // corte) -- sin este mismo toggle aparecía de golpe apenas la
-        // FIGURA de la próxima foto pasaba a opacity:1, aunque su foto
-        // todavía estuviera 100% tapada por el clip-path. Ahora solo se ve
-        // en el plato que ya quedó asentado como el actual.
-        fotos.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
       }
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(pintarGaleria); };
@@ -1614,22 +1606,6 @@ const App = {
     btnAbrir.addEventListener('click', abrir);
     if (btnCerrar) btnCerrar.addEventListener('click', cerrar);
     scroller.addEventListener('scroll', onScroll, { passive: true });
-    if (conTilt) {
-      // rect cacheado al entrar -- el scroller es fixed/overlay, su propia
-      // posición en el viewport no cambia mientras se hace scroll adentro
-      // (solo cambia scrollTop). Releerlo en cada pointermove fuerza layout
-      // síncrono y traba desktops de gama baja -- ver misma nota en pase().
-      let scrollerRect = null;
-      scroller.addEventListener('pointerenter', () => { scrollerRect = scroller.getBoundingClientRect(); });
-      scroller.addEventListener('pointermove', e => {
-        if (!scrollerRect) scrollerRect = scroller.getBoundingClientRect();
-        tiltRX = (0.5 - (e.clientY - scrollerRect.top) / scrollerRect.height) * 6;
-        tiltRY = ((e.clientX - scrollerRect.left) / scrollerRect.width - 0.5) * 6;
-        onScroll();
-      });
-      scroller.addEventListener('pointerleave', () => { scrollerRect = null; tiltRX = 0; tiltRY = 0; onScroll(); });
-      window.addEventListener('resize', () => { scrollerRect = null; });
-    }
     window.addEventListener('keydown', e => {
       if (!abierta) return;
       if (e.key === 'Escape') { cerrar(); return; }
