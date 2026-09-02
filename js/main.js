@@ -161,6 +161,10 @@ const App = {
     // ES/EN no ocupan el mismo alto de texto -- el offsetTop cacheado de
     // cada sección puede haber corrido con el cambio de idioma.
     this._capsTops = null;
+    // todos los refrescar* de arriba reescriben texto (textContent/innerHTML)
+    // en los mismos elementos que llevan la comilla de cierre -- eso borra
+    // la marca anterior sin avisar, hay que rehacerla con el texto nuevo.
+    this.posicionarComillas();
   },
 
   componentDidMount() {
@@ -191,7 +195,7 @@ const App = {
     let tResize;
     this.onResize = () => {
       clearTimeout(tResize);
-      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this._paraDatos = undefined; this._capsTops = null; this.pintar(); }, 150);
+      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this._paraDatos = undefined; this._capsTops = null; this.pintar(); this.posicionarComillas(); }, 150);
     };
     window.addEventListener('resize', this.onResize);
     // fuentes/imágenes que terminan de cargar después del primer pintado
@@ -237,6 +241,48 @@ const App = {
     q('#lang-toggle-btn')?.addEventListener('click', () => this.cambiarIdioma());
     q('[data-role="volver-arriba"]')?.addEventListener('click', () => {
       window.scrollTo({ top: 0, behavior: this.reduced ? 'auto' : 'smooth' });
+    });
+
+    this.posicionarComillas();
+    // las fuentes propias cargan después del primer pintado -- si esto se
+    // mide contra la fuente de reserva, el « chico real puede terminar en
+    // otro punto apenas Piazzolla entra y el texto reajusta su ancho. Se
+    // vuelve a medir una vez que el navegador confirma que ya cargaron.
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => this.posicionarComillas());
+    }
+  },
+
+  /* ---------- cierre de comillas decorativas: medido, no adivinado.
+     Dos técnicas de CSS puro (offset fijo en em, después ancho:0 con
+     overflow visible) para pegar el « grande al final real del texto
+     terminaron dependiendo del motor de render, del ancho de pantalla o
+     de si la fuente ya había cargado en el momento en que el navegador
+     decidía dónde cortar el renglón -- se corría en algunos casos y no en
+     otros. Acá se mide con el DOM real en el momento exacto de pintar
+     (Range.getClientRects() sobre todo el contenido salvo la marca misma),
+     así no depende de nada de eso. Se llama de nuevo cada vez que el
+     contenido de una cita puede haber cambiado: ES/EN, cambio de paso del
+     menú, resize. */
+  posicionarComillas() {
+    all('.qv-cita').forEach(el => {
+      let marca = el.querySelector(':scope > .qv-cita-cierre');
+      if (!marca) {
+        marca = document.createElement('span');
+        marca.className = 'qv-cita-cierre';
+        marca.setAttribute('aria-hidden', 'true');
+        marca.textContent = '»';
+        el.appendChild(marca);
+      }
+      const range = document.createRange();
+      range.selectNodeContents(el);
+      range.setEndBefore(marca);
+      const rects = range.getClientRects();
+      if (!rects.length) return;
+      const ultima = rects[rects.length - 1];
+      const elRect = el.getBoundingClientRect();
+      marca.style.left = (ultima.right - elRect.left) + 'px';
+      marca.style.top = (ultima.top - elRect.top + ultima.height / 2) + 'px';
     });
   },
 
@@ -1333,6 +1379,8 @@ const App = {
         f.style.transform = n === i ? 'translateX(10px)' : 'none';
         f.style.borderBottomColor = n === i ? 'rgba(224,164,95,0.5)' : 'rgba(242,236,225,0.09)';
       });
+      // cita.textContent de arriba borró la marca de cierre del paso anterior
+      this.posicionarComillas();
     };
     this.ciclarPaso = () => {
       if (this.tPaso) clearInterval(this.tPaso);

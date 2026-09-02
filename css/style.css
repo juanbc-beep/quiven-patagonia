@@ -617,12 +617,15 @@ button { font: inherit; }
 /* comilla decorativa: la cita misma es la textura -- un «» propio, mucho más
    grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
    los mismos signos con los que ya abre y cierra cada cita, a otra escala.
-   La apertura sí puede anclarse a la esquina del bloque (el renglón 1
-   siempre arranca ahí) -- pero la última línea casi nunca llega hasta el
-   borde derecho, así que anclar el cierre a esa esquina lo dejaba flotando
-   lejos del punto donde el texto realmente termina. El cierre va en el
-   flujo normal, pegado al último carácter real, sea cual sea el largo
-   de la cita. */
+   La apertura se ancla por CSS puro a la esquina del bloque (el renglón 1
+   siempre arranca ahí, sea cual sea el contenido). El cierre es distinto:
+   la última línea casi nunca llega hasta el borde derecho, y CUALQUIER
+   truco de CSS para "pegarlo sin ocupar espacio" (probados: offset fijo
+   en em, ancho:0 con overflow visible) terminaba dependiendo de motor de
+   render/ancho de pantalla/timing de carga de la fuente -- se corría en
+   algunos casos y no en otros. Por eso el cierre se posiciona con JS real
+   (ver posicionarComillas() en main.js), midiendo dónde termina el texto
+   real en el momento exacto de pintar, no adivinándolo por CSS. */
 .qv-cita { position: relative; }
 .qv-cita::before {
   content: '\00AB';
@@ -638,28 +641,16 @@ button { font: inherit; }
   pointer-events: none;
   user-select: none;
 }
-.qv-cita::after {
-  content: '\00BB';
-  /* un offset fijo en em (probado a 1440px) se corría en otros anchos:
-     el glifo grande vive en el flujo normal del texto, pegado sin espacio
-     al último carácter real -- si en ESE renglón puntual no queda hueco
-     para sus 3em, salta entero a un renglón nuevo y aparece en cualquier
-     lado. Ancho:0 + overflow visible saca el glifo del cálculo de wrap
-     por completo (ocupa CERO espacio real, nunca puede no entrar) y
-     text-align:right lo hace crecer hacia la izquierda desde ese punto
-     cero -- que es exactamente donde termina el texto real. Sin medir
-     nada a mano, y ya no depende del ancho de pantalla. */
-  display: inline-block;
-  width: 0;
-  overflow: visible;
-  white-space: nowrap;
-  text-align: right;
+.qv-cita-cierre {
+  position: absolute;
+  left: 0;
+  top: 0;
+  transform: translate(-100%, -50%);
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
   font-size: 3em;
-  line-height: 0;
-  vertical-align: -0.28em;
+  line-height: 1;
   color: rgb(var(--dorado-rgb) / 0.16);
   pointer-events: none;
   user-select: none;
