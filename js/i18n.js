@@ -72,6 +72,7 @@ window.I18N = (function () {
     cred3: { en: 'LOCALLY-SOURCED PATAGONIAN PRODUCE' },
     cred4: { en: 'A HOUSE ON THE NAHUEL HUAPI' },
 
+    descensoHint: { es: '↕ SCROLL · UN CAPÍTULO A LA VEZ', en: '↕ SCROLL · ONE CHAPTER AT A TIME' },
     terrHint: { es: '← → CAMBIAR REGIÓN', en: '← → CHANGE REGION' },
     terrKicker: { en: '02 · The Territory' },
     terrTitulo: { en: 'Four pantries, one single landscape.' },
@@ -108,7 +109,13 @@ window.I18N = (function () {
     vocesTexto: { en: 'The Michelin guide hasn’t reached Patagonia yet. Those who have — and who’ve eaten across half the world — left this in writing.' },
     vocesResenas: { en: 'GUEST<br>REVIEWS' },
 
-    expKicker: { en: '08 · The Experience' },
+    eventosKicker: { en: '08 · Events & Catering' },
+    eventosTitulo: { en: 'The kitchen leaves home too.' },
+    eventosTexto: { en: 'Premium catering for events of any size, with the same seasonal cooking and care served at the table. The dining room can be booked whole for small groups after something of their own — or the whole setup travels wherever it’s needed, with efficient logistics of its own.' },
+    eventosCita: { en: '“Professionalism and warmth, in equal measure.”' },
+    eventosBtn: { en: 'Ask about events' },
+
+    expKicker: { en: '09 · The Experience' },
     expTitulo: { en: 'The journey ends at your table' },
     expTexto: { en: 'A tasting menu with vegetarian options and allergy alternatives, arranged when you book.' },
     expBtnReservar: { en: 'BOOK A TABLE' },

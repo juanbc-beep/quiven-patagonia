@@ -102,6 +102,7 @@ const CAP_LABELS = {
   Historia: { es: 'Historia', en: 'Story' },
   Casa: { es: 'Casa', en: 'House' },
   Voces: { es: 'Voces', en: 'Voices' },
+  Eventos: { es: 'Eventos', en: 'Events' },
   Experiencia: { es: 'Experiencia', en: 'Experience' }
 };
 
@@ -444,6 +445,34 @@ const App = {
     let etapaAsentada = 0;
     let bloqueado = false;
 
+    // puntos: en qué capítulo de los 5 estás, y saltar directo a
+    // cualquiera -- mismo salto que dar un paso con rueda/swipe, así que
+    // hereda el mismo fundido cruzado y sincronismo de texto.
+    const dotsHost = q('[data-role="descenso-dots"]');
+    const dots = [];
+    if (dotsHost) {
+      DESCENSO.forEach((d, i) => {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'descenso-dot';
+        btn.setAttribute('aria-label', (i + 1) + ' / ' + DESCENSO.length);
+        // "irAEtapa" todavía no está definida en este punto del closure,
+        // pero sí lo va a estar para cuando alguien realmente haga clic
+        // (recién ahí se evalúa, no al armar el botón)
+        btn.addEventListener('click', () => irAEtapa(i));
+        dotsHost.appendChild(btn);
+        dots.push(btn);
+      });
+      dots[0].classList.add('is-activo');
+    }
+    const marcarDots = i => dots.forEach((d, n) => d.classList.toggle('is-activo', n === i));
+
+    // el hint de "scroll = un capítulo a la vez" solo hace falta mientras
+    // nadie movió nada todavía -- una vez que la persona ya dio un paso,
+    // sea como sea, ya entendió la mecánica y el hint solo estorba
+    const hint = q('.descenso-hint');
+    const ocultarHint = () => { if (hint) hint.classList.add('is-oculto'); };
+
     const geom = () => ({
       top: zona.offsetTop,
       alto: Math.max(1, zona.offsetHeight - window.innerHeight)
@@ -538,6 +567,8 @@ const App = {
       App._descensoPasoActivo = true;
       fundirCapas(previa, i);
       fundirTexto(i);
+      marcarDots(i);
+      ocultarHint();
       armarLiberacion(1200);
       if (App.reduced) { window.scrollTo(0, destino); return; }
       bloqueado = true;
@@ -552,6 +583,17 @@ const App = {
       };
       requestAnimationFrame(paso);
     };
+
+    // los puntos también tienen que reflejar un scroll que NO pasó por
+    // manejar() -- arrastrar la scrollbar a mano, Home/End, el propio
+    // auto-descenso por inactividad. Se sincronizan solos con cualquier
+    // scroll real, salvo mientras hay un paso propio en curso (bloqueado),
+    // que ya se ocupa de marcarlos.
+    window.addEventListener('scroll', () => {
+      if (bloqueado || !dentroDeZona()) return;
+      const { etapa } = estadoActual();
+      if (etapa !== etapaAsentada) { etapaAsentada = etapa; marcarDots(etapa); ocultarHint(); }
+    }, { passive: true });
 
     // wheel/swipe hacia abajo -> el capítulo siguiente; hacia arriba -> el
     // anterior. En el primer/último capítulo, según el sentido, se deja
@@ -1513,7 +1555,10 @@ const App = {
     if (!a || !b) return;
     const tarjeta = (c, i) => {
       const d = document.createElement('div');
-      d.style.cssText = 'flex:0 0 auto;width:min(78vw,400px);border:1px solid rgba(242,236,225,0.12);background:#0d0b0a;padding:24px 26px;border-radius:2px;display:flex;flex-direction:column;gap:14px;transition:border-color .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
+      // el inset shadow es el mismo lenguaje "envejecido" que .hist-photo::after
+      // en La Historia -- oscurece apenas las esquinas de la tarjeta, para que
+      // las citas de comensales se sientan tan de archivo como las fotos del chef
+      d.style.cssText = 'flex:0 0 auto;width:min(78vw,400px);border:1px solid rgba(242,236,225,0.12);background:#0d0b0a;padding:24px 26px;border-radius:2px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 28px 4px rgba(0,0,0,0.3);transition:border-color .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
       const sello = document.createElement('span');
       sello.style.cssText = "width:26px;height:26px;border-radius:50%;border:1px solid rgba(224,164,95,0.5);display:flex;align-items:center;justify-content:center;font-family:'Piazzolla',serif;font-size:0.6rem;color:#e0a45f;flex:0 0 auto";
       sello.textContent = String(i + 1);

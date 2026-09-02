@@ -113,6 +113,10 @@ img { display: block; max-width: 100%; }
 html {
   scrollbar-width: thin;
   scrollbar-color: rgb(var(--dorado-rgb) / 0.45) rgb(var(--negro-1-rgb) / 0.4);
+  /* evita el rebote nativo del final de página en iOS/Android, que
+     asoma el fondo blanco del sistema detrás de una página que es
+     oscura de punta a punta */
+  overscroll-behavior-y: none;
 }
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: rgb(var(--negro-1-rgb) / 0.4); }
@@ -500,6 +504,16 @@ button { font: inherit; }
   transition: opacity .5s ease;
 }
 .hist-photo:hover .hist-sheen { opacity: 1; }
+/* borde envejecido: oscurece las esquinas como una foto de archivo, sin
+   tapar el centro -- coherente con que esta sección es la única que
+   cuenta historia personal, no producto */
+.hist-photo::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  box-shadow: inset 0 0 46px 8px rgba(5, 4, 3, 0.4), inset 0 0 0 1px rgb(var(--crema-rgb) / 0.05);
+}
 @media (prefers-reduced-motion: reduce) {
   .hist-photo { transition: none; }
 }
@@ -757,7 +771,12 @@ button { font: inherit; }
 }
 /* mobile: el hilo y el sello viajero están ocultos, el rincón inferior derecho está libre */
 @media (max-width: 900px) {
-  .wa-fab { right: 16px; bottom: 16px; width: 48px; height: 48px; }
+  .wa-fab {
+    right: calc(16px + env(safe-area-inset-right));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    width: 48px;
+    height: 48px;
+  }
 }
 
 /* ---------- volver arriba: aparece recién después de bajar, en la esquina
@@ -789,7 +808,12 @@ button { font: inherit; }
   .top-fab { right: clamp(16px, 2.4vw, 38px); bottom: clamp(16px, 3svh, 40px); }
 }
 @media (max-width: 900px) {
-  .top-fab { left: 16px; bottom: 16px; width: 48px; height: 48px; }
+  .top-fab {
+    left: calc(16px + env(safe-area-inset-left));
+    bottom: calc(16px + env(safe-area-inset-bottom));
+    width: 48px;
+    height: 48px;
+  }
 }
 
 /* ============================================================
@@ -1166,4 +1190,67 @@ button { font: inherit; }
   .galeria-zona { font-size: 0.58rem; }
   .galeria-desc { font-size: 0.8rem; max-width: 34ch; }
   .galeria-hint { display: none; }
+}
+
+/* ---------- puntos del Descenso: en qué capítulo de 5 estás, y saltar
+   directo a cualquiera -- antes no había ninguna señal de esto salvo el
+   texto, que cambia entero con cada capítulo ---------- */
+.descenso-dots {
+  position: absolute;
+  right: clamp(16px, 4vw, 40px);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 4;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.descenso-dot {
+  display: block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: 1px solid rgb(var(--crema-rgb) / 0.4);
+  background: none;
+  padding: 15px;
+  margin: -15px;
+  cursor: pointer;
+  background-clip: content-box;
+  transition: background-color .3s ease, border-color .3s ease, transform .3s cubic-bezier(.16, 1, .3, 1);
+}
+.descenso-dot:hover { border-color: rgb(var(--crema-rgb) / 0.75); }
+.descenso-dot.is-activo {
+  background-color: var(--dorado);
+  border-color: var(--dorado);
+  transform: scale(1.3);
+}
+@media (prefers-reduced-motion: reduce) {
+  .descenso-dot { transition: none; }
+}
+@media (max-width: 700px) {
+  .descenso-dots { right: 12px; gap: 13px; }
+}
+
+/* ---------- hint del Descenso: explica que el scroll avanza de a un
+   capítulo por vez -- sin esto, alguien que scrollea rápido puede leer
+   la pausa como si la página se hubiera trabado, en vez de una decisión
+   de diseño. Se apaga solo apenas la persona da el primer paso, sea
+   como sea que lo haya dado (rueda, swipe, clic en un punto). ---------- */
+.descenso-hint {
+  position: absolute;
+  z-index: 4;
+  left: 50%;
+  bottom: clamp(18px, 3.4svh, 32px);
+  transform: translateX(-50%);
+  font-size: clamp(0.44rem, 1.4vw, 0.56rem);
+  letter-spacing: 0.2em;
+  color: var(--marron-tenue);
+  white-space: nowrap;
+  text-align: center;
+  opacity: 1;
+  transition: opacity .6s ease;
+}
+.descenso-hint.is-oculto { opacity: 0; }
+@media (max-width: 700px) {
+  .descenso-hint { bottom: clamp(14px, 2.6svh, 24px); font-size: 0.42rem; }
 }
