@@ -214,6 +214,7 @@ const App = {
     this.portal();
     this.tres();
     this.galeria();
+    this.credenciales();
 
     this.onScroll = () => {
       if (this._raf) return;
@@ -756,6 +757,22 @@ const App = {
   sinTres() {
     const cf = q('[data-role="c-fuego"]');
     if (cf) cf.style.display = 'none';
+  },
+
+  /* ---------- franja de credenciales: marquee infinito -- se pausa con
+     :hover en mouse, pero el touch no tiene hover, así que sin esto un
+     lector alcanza a leer la mitad de una frase antes de que se le escape
+     de nuevo. pointerdown/up cubre touch y mouse por igual, sin duplicar
+     la lógica de :hover que ya cubre el caso de mouse sin tocar nada. ---------- */
+  credenciales() {
+    const cont = q('.credenciales');
+    if (!cont) return;
+    cont.addEventListener('pointerdown', e => {
+      if (e.pointerType !== 'touch') return;
+      cont.classList.add('is-paused');
+    });
+    cont.addEventListener('pointerup', () => cont.classList.remove('is-paused'));
+    cont.addEventListener('pointercancel', () => cont.classList.remove('is-paused'));
   },
 
   /* ---------- 02 territorio ---------- */

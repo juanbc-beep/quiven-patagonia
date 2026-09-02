@@ -647,7 +647,8 @@ button { font: inherit; }
   gap: clamp(18px, 3.5vw, 44px);
   animation: qvCredMarquee 26s linear infinite;
 }
-.credenciales:hover .credenciales-track { animation-play-state: paused; }
+.credenciales:hover .credenciales-track,
+.credenciales.is-paused .credenciales-track { animation-play-state: paused; }
 .credenciales span {
   font-size: clamp(0.64rem, 1.7vw, 0.72rem);
   letter-spacing: 0.04em;
