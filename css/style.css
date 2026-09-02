@@ -15,6 +15,12 @@
   --negro-2-rgb: 5 6 10;
   --arena: #cbbca9;
   --arena-rgb: 203 188 169;
+  /* único acento frío de todo el sitio -- reservado a los puntos donde el
+     agua del lago es literalmente el tema (el nodo "LAGO" del mapa de
+     Territorio), nunca decorativo. El resto de la paleta es cálida de
+     punta a punta a propósito. */
+  --lago: #5fa3b0;
+  --lago-rgb: 95 163 176;
 }
 
 /* fuentes auto-hospedadas (ver index.html) -- subset latin, cubre español e inglés */
@@ -368,6 +374,31 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .d-fondo-img { animation: none; }
 }
+/* mismo lenguaje cinematográfico del Descenso (zoom lento, nunca se
+   repite), pero en un wrapper aparte -- la foto de Casa ya tiene su
+   propio transform manejado por JS (data-parallax, se mueve con el
+   scroll) y una animación CSS en el mismo elemento se lo pisaría */
+.casa-fondo-zoom {
+  animation: qvFondoZoom 70s cubic-bezier(.3, 0, .4, 1) forwards;
+  transform-origin: 46% 38%;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .casa-fondo-zoom { animation: none; }
+}
+/* interludio panorámico: paneo horizontal lento y perpetuo, vaivén suave --
+   es una pausa ambiental, no una secuencia con final, así que a diferencia
+   del zoom del Descenso/Casa (forwards, una sola vez) este sí repite */
+.qv-pan-interludio {
+  animation: qvPan 44s ease-in-out infinite alternate;
+}
+@keyframes qvPan {
+  from { transform: translateX(0); }
+  to { transform: translateX(-19%); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qv-pan-interludio { animation: none; }
+}
 
 /* ---------- variantes de reveal por sección: no todo se forma igual ---------- */
 /* el clip-path va en un wrapper interno, no en el elemento observado: si el
@@ -629,12 +660,19 @@ button { font: inherit; }
 .qv-cita::after {
   content: '\00BB';
   display: inline;
+  /* posición relativa (no absoluta) para que siga en el flujo -- pegado
+     al último carácter real, sea cual sea el largo de la cita -- pero
+     corrida hacia atrás lo suficiente para caer ENCIMA de él, no al lado.
+     Mismo efecto de doble comilla que ya se da solo en la apertura,
+     donde el « grande coincide con el « chico porque el renglón 1
+     siempre arranca en la esquina del bloque. */
+  position: relative;
+  left: -0.85em;
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
   font-size: 3em;
   line-height: 0;
-  margin-left: 0.04em;
   vertical-align: -0.28em;
   color: rgb(var(--dorado-rgb) / 0.16);
   pointer-events: none;
