@@ -148,6 +148,7 @@ const App = {
     if (this.refrescarMenu) this.refrescarMenu();
     if (this.refrescarVoces) this.refrescarVoces();
     if (this.refrescarHistoria) this.refrescarHistoria();
+    if (this.refrescarGaleria) this.refrescarGaleria();
     this._etapa = -1;
     // pintarDescenso tiene una guarda "ya asentada" que corta la función antes
     // de tocar el texto si la posición de scroll no cambió desde el último
@@ -1418,6 +1419,20 @@ const App = {
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
     const nombres = items.map(it => it.querySelector('.galeria-info'));
+    const numEls = items.map(it => it.querySelector('.galeria-num'));
+    // "PLATO 07 · DE 14" -- mismo lenguaje que "PASO 01 · DE 05" en El Menú
+    // de Pasos, para que la galería se lea como parte del mismo sistema de
+    // numeración del sitio en vez de flotar sola. Se recalcula en el cambio
+    // de idioma (PLATO/DISH) a través de refrescarGaleria.
+    const pintarNumeros = () => {
+      const palabra = window.I18N ? window.I18N.t('galeriaNumPlato') : 'PLATO';
+      const de = window.I18N ? window.I18N.t('pasoNumDe') : 'DE';
+      numEls.forEach((el, i) => {
+        if (el) el.textContent = palabra + ' ' + String(i + 1).padStart(2, '0') + ' · ' + de + ' ' + String(n).padStart(2, '0');
+      });
+    };
+    pintarNumeros();
+    this.refrescarGaleria = pintarNumeros;
     let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
