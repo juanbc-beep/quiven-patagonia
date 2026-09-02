@@ -343,6 +343,15 @@ const App = {
       p.style.pointerEvents = 'none';
       setTimeout(() => { if (p) p.style.display = 'none'; }, 1600);
     }
+    // display:none en el contenedor NO pausa el <video> de adentro -- sin esto
+    // el video del portal (autoplay+loop) seguía decodificando frames para
+    // siempre en segundo plano, el resto de la visita entera, sin que nadie
+    // lo viera. En desktop de gama baja (sobre todo sin decode de video por
+    // hardware) eso solo era responsable de la enorme mayoría del trabajo de
+    // CPU medido en toda la página -- mobile no lo sufre igual porque casi
+    // todo hardware de celular sí tiene decode de video dedicado.
+    const pv = q('[data-role="portal-video"]');
+    if (pv) pv.pause();
     App.bloquear(false);
     ['[data-role="nav"]', '[data-role="hilo"]', '.wa-fab'].forEach(s => {
       const el = q(s);
@@ -744,7 +753,15 @@ const App = {
             if (!this.gFuego) return;
             this.gFuego.setActive(e.isIntersecting);
             this.gFuego.setIntensity(e.isIntersecting ? 1 : 0.06);
-          }, 0.02, '400px 0px');
+            // este mismo margen decide cuándo se apaga, no solo cuándo se
+            // prende: con 400px de buffer el canvas (casi del tamaño de la
+            // pantalla, humo + brasas con blending aditivo) seguía dibujando
+            // de fondo mucho después de haber scrolleado a la sección
+            // siguiente -- en un desktop de gama baja eso era, medido, la
+            // mayor parte del costo de CPU de toda la página. La creación
+            // (baja densidad de partículas la primera vez) sigue arrancando
+            // con margen para que no haya un pop-in brusco al entrar.
+          }, 0.02, '60px 0px');
         }
       } catch (err) {
         console.warn('3D no disponible', err);
@@ -944,20 +961,31 @@ const App = {
     const tiltFrame = q('[data-role="servicio-tilt"]');
     const tiltSheen = q('[data-role="servicio-sheen"]');
     if (tiltFrame && !this.coarse && !this.reduced) {
+      // el rect se mide una sola vez al entrar, no en cada pointermove: un
+      // mouse normal dispara pointermove decenas de veces por segundo, y
+      // leer getBoundingClientRect() ahí fuerza layout síncrono en cada uno
+      // -- en desktops de gama baja eso se sentía como el sitio entero
+      // trabado mientras se mueve el mouse sobre la zona. El elemento no
+      // cambia de posición mientras el cursor sigue encima, así que una
+      // sola medición alcanza.
+      let tiltRect = null;
+      tiltFrame.addEventListener('pointerenter', () => { tiltRect = tiltFrame.getBoundingClientRect(); });
       tiltFrame.addEventListener('pointermove', e => {
-        const r = tiltFrame.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
+        if (!tiltRect) tiltRect = tiltFrame.getBoundingClientRect();
+        const px = (e.clientX - tiltRect.left) / tiltRect.width;
+        const py = (e.clientY - tiltRect.top) / tiltRect.height;
         tiltFrame.style.setProperty('--rx', ((0.5 - py) * 8) + 'deg');
         tiltFrame.style.setProperty('--ry', ((px - 0.5) * 8) + 'deg');
         tiltFrame.style.setProperty('--sc', '1.02');
         if (tiltSheen) { tiltSheen.style.setProperty('--sx', (px * 100) + '%'); tiltSheen.style.setProperty('--sy', (py * 100) + '%'); }
       });
       tiltFrame.addEventListener('pointerleave', () => {
+        tiltRect = null;
         tiltFrame.style.setProperty('--rx', '0deg');
         tiltFrame.style.setProperty('--ry', '0deg');
         tiltFrame.style.setProperty('--sc', '1');
       });
+      window.addEventListener('resize', () => { tiltRect = null; });
     }
   },
 
@@ -1043,16 +1071,22 @@ const App = {
 
     // el plato responde al mouse con una leve inclinación 3D y un brillo que sigue al cursor
     if (tilt && !this.coarse && !this.reduced) {
+      // rect cacheado al entrar, no releído en cada pointermove -- ver nota
+      // igual en servicio-tilt (pase()): getBoundingClientRect() en cada
+      // evento fuerza layout síncrono y en desktop de gama baja se traba.
+      let platoRect = null;
+      zona.addEventListener('pointerenter', () => { platoRect = zona.getBoundingClientRect(); });
       zona.addEventListener('pointermove', e => {
-        const r = zona.getBoundingClientRect();
-        const px = (e.clientX - r.left) / r.width;
-        const py = (e.clientY - r.top) / r.height;
+        if (!platoRect) platoRect = zona.getBoundingClientRect();
+        const px = (e.clientX - platoRect.left) / platoRect.width;
+        const py = (e.clientY - platoRect.top) / platoRect.height;
         const rx = (0.5 - py) * 14;
         const ry = (px - 0.5) * 14;
         tilt.style.transform = 'rotateX(' + rx + 'deg) rotateY(' + ry + 'deg) scale(1.03)';
         if (sheen) { sheen.style.setProperty('--sx', (px * 100) + '%'); sheen.style.setProperty('--sy', (py * 100) + '%'); }
       });
-      zona.addEventListener('pointerleave', () => { tilt.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)'; });
+      zona.addEventListener('pointerleave', () => { platoRect = null; tilt.style.transform = 'rotateX(0deg) rotateY(0deg) scale(1)'; });
+      window.addEventListener('resize', () => { platoRect = null; });
     }
     this.platoMotas(q('[data-role="c-plato-motas"]'));
 
@@ -1220,18 +1254,24 @@ const App = {
     if (!this.coarse && !this.reduced) {
       all('.hist-photo').forEach(fig => {
         const sheen = fig.querySelector('.hist-sheen');
+        // rect cacheado al entrar -- ver nota en pase()/menu(): releerlo en
+        // cada pointermove fuerza layout síncrono y traba desktops de gama baja
+        let figRect = null;
+        fig.addEventListener('pointerenter', () => { figRect = fig.getBoundingClientRect(); });
         fig.addEventListener('pointermove', e => {
-          const r = fig.getBoundingClientRect();
-          const px = (e.clientX - r.left) / r.width;
-          const py = (e.clientY - r.top) / r.height;
+          if (!figRect) figRect = fig.getBoundingClientRect();
+          const px = (e.clientX - figRect.left) / figRect.width;
+          const py = (e.clientY - figRect.top) / figRect.height;
           fig.style.setProperty('--rx', ((0.5 - py) * 9) + 'deg');
           fig.style.setProperty('--ry', ((px - 0.5) * 9) + 'deg');
           if (sheen) { sheen.style.setProperty('--sx', (px * 100) + '%'); sheen.style.setProperty('--sy', (py * 100) + '%'); }
         });
         fig.addEventListener('pointerleave', () => {
+          figRect = null;
           fig.style.setProperty('--rx', '0deg');
           fig.style.setProperty('--ry', '0deg');
         });
+        window.addEventListener('resize', () => { figRect = null; });
       });
     }
   },
@@ -1302,14 +1342,26 @@ const App = {
   lazyVideo(role, src) {
     const v = q('[data-role="' + role + '"]');
     if (!v || this.datosLimitados || this.reduced) return;
+    let cargado = false;
+    // antes esto arrancaba el video una vez y desconectaba el observer --
+    // el <video> quedaba decodificando en loop PARA SIEMPRE aunque el
+    // usuario ya hubiera scrolleado lejos de la sección. Con 2-3 videos así
+    // en la página (portal, fuego, experiencia) un desktop sin decode de
+    // video por hardware terminaba con varios decodificando en simultáneo
+    // sin que ninguno se viera -- esto era la causa real del lag en desktop
+    // de gama baja. Ahora se pausa/reanuda según visibilidad, igual que ya
+    // se hace con el canvas del fuego (setActive) y las motas del plato.
     const io = new IntersectionObserver(es => es.forEach(e => {
-      if (!e.isIntersecting) return;
-      v.src = src;
-      const pr = v.play();
-      if (pr && pr.catch) pr.catch(() => {});
-      io.disconnect();
+      if (e.isIntersecting) {
+        if (!cargado) { v.src = src; cargado = true; }
+        const pr = v.play();
+        if (pr && pr.catch) pr.catch(() => {});
+      } else if (cargado) {
+        v.pause();
+      }
     }), { rootMargin: '600px 0px' });
     io.observe(v);
+    this.observadores.push(io);
   },
 
   experiencia() {
@@ -1501,13 +1553,20 @@ const App = {
     if (btnCerrar) btnCerrar.addEventListener('click', cerrar);
     scroller.addEventListener('scroll', onScroll, { passive: true });
     if (conTilt) {
+      // rect cacheado al entrar -- el scroller es fixed/overlay, su propia
+      // posición en el viewport no cambia mientras se hace scroll adentro
+      // (solo cambia scrollTop). Releerlo en cada pointermove fuerza layout
+      // síncrono y traba desktops de gama baja -- ver misma nota en pase().
+      let scrollerRect = null;
+      scroller.addEventListener('pointerenter', () => { scrollerRect = scroller.getBoundingClientRect(); });
       scroller.addEventListener('pointermove', e => {
-        const r = scroller.getBoundingClientRect();
-        tiltRX = (0.5 - (e.clientY - r.top) / r.height) * 6;
-        tiltRY = ((e.clientX - r.left) / r.width - 0.5) * 6;
+        if (!scrollerRect) scrollerRect = scroller.getBoundingClientRect();
+        tiltRX = (0.5 - (e.clientY - scrollerRect.top) / scrollerRect.height) * 6;
+        tiltRY = ((e.clientX - scrollerRect.left) / scrollerRect.width - 0.5) * 6;
         onScroll();
       });
-      scroller.addEventListener('pointerleave', () => { tiltRX = 0; tiltRY = 0; onScroll(); });
+      scroller.addEventListener('pointerleave', () => { scrollerRect = null; tiltRX = 0; tiltRY = 0; onScroll(); });
+      window.addEventListener('resize', () => { scrollerRect = null; });
     }
     window.addEventListener('keydown', e => {
       if (!abierta) return;
