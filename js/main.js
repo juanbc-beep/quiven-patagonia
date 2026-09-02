@@ -1563,6 +1563,7 @@ const App = {
       sello.style.cssText = "width:26px;height:26px;border-radius:50%;border:1px solid rgba(224,164,95,0.5);display:flex;align-items:center;justify-content:center;font-family:'Piazzolla',serif;font-size:0.6rem;color:#e0a45f;flex:0 0 auto";
       sello.textContent = String(i + 1);
       const p = document.createElement('p');
+      p.className = 'qv-cita';
       p.style.cssText = "margin:0;font-family:'Piazzolla',serif;font-style:italic;font-size:clamp(0.94rem,2.6vw,1.14rem);line-height:1.5;color:#f2ece1";
       p.textContent = '«' + c[0] + '»';
       const s = document.createElement('span');

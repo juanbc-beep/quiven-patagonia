@@ -583,6 +583,37 @@ button { font: inherit; }
   transition: opacity .6s ease, filter .6s ease;
 }
 .hist-chapter.is-in .hist-quote .word { opacity: 1; filter: blur(0); }
+/* capitular: el párrafo que abre el relato de La Historia se distingue por
+   tipografía, no por otro elemento gráfico -- la primera letra en Piazzolla,
+   como en una página editorial, marca "acá empieza la historia" antes de
+   que se lea una sola palabra. */
+.hist-abre::first-letter {
+  font-family: 'Piazzolla', serif;
+  font-weight: 300;
+  font-size: 2.5em;
+  line-height: 0.72;
+  float: left;
+  margin: 0.03em 0.09em 0 0;
+  color: var(--dorado);
+}
+/* comilla decorativa: la cita misma es la textura -- un « propio, mucho más
+   grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
+   el mismo signo con el que ya abre cada cita, a otra escala. */
+.qv-cita { position: relative; }
+.qv-cita::before {
+  content: '\00AB';
+  position: absolute;
+  left: -0.06em;
+  top: -0.24em;
+  font-family: 'Piazzolla', serif;
+  font-style: normal;
+  font-weight: 200;
+  font-size: 3em;
+  line-height: 1;
+  color: rgb(var(--dorado-rgb) / 0.16);
+  pointer-events: none;
+  user-select: none;
+}
 .hist-caption {
   font-size: clamp(0.58rem, 1.7vw, 0.66rem);
   letter-spacing: 0.14em;
