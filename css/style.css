@@ -997,40 +997,35 @@ button { font: inherit; }
      las 14 fotos midan siempre lo mismo, sin importar el texto de cada una. */
   flex-shrink: 0;
 }
-/* sombreado real detrás del marco -- un rectángulo sólido, no un gradiente
-   radial (un radial-gradient "closest-side" sobre una caja grande decae
-   desde el centro, así que casi toda su parte opaca queda tapada por el
-   propio marco y solo asoma un resto ya muy tenue: quedaba invisible). Acá
-   es una placa oscura del tamaño del marco, corrida hacia abajo (como si
-   la luz viniera de arriba) y difuminada -- el marco opaco tapa el centro
-   y el blur asoma alrededor como sombra real, más marcada abajo que arriba.
-   Va en .galeria-item-photo (afuera del overflow:hidden del marco, no se
-   recorta) y ANTES del marco en el DOM, pinta detrás sin necesitar z-index.
-   Escapado a ".galeria-item" para no alcanzar también al .galeria-item-photo
-   "fantasma" del sello fijo (mismo tamaño, sin foto adentro) -- ahí una
-   sombra sin foto se vería como una mancha flotando sola. */
-.galeria-item .galeria-item-photo::before {
-  content: '';
-  position: absolute;
-  left: 5%;
-  right: 5%;
-  top: 8%;
-  bottom: -6%;
-  border-radius: 4px;
-  background: rgba(0, 0, 0, 0.62);
-  filter: blur(26px);
-  pointer-events: none;
+/* sombra real, por fuera del marco -- box-shadow puesto en .galeria-item-photo
+   (no en .galeria-item-frame, que tiene clip-path aplicado por JS todo el
+   tiempo y recorta su propia sombra a la nada, ver nota arriba). Este
+   contenedor no tiene overflow ni clip-path, así que la sombra se pinta
+   completa y solo por fuera de la caja -- nunca puede superponerse a la
+   foto en sí, es una propiedad del box, no un elemento aparte. Sutil (alpha
+   bajo) para que sea una sombra, no una mancha oscura. Escapado a
+   ".galeria-item" para no alcanzar también al .galeria-item-photo
+   "fantasma" del sello fijo -- si no, al estar en el mismo lugar exacto
+   que la foto real, las dos sombras se sumarían y quedaría el doble de
+   oscura. */
+.galeria-item .galeria-item-photo {
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.3), 0 4px 10px rgba(0, 0, 0, 0.18);
 }
 .galeria-item-frame {
   /* el clip-path del wipe va acá: este marco tiene el mismo tamaño exacto
      que la foto, así el corte coincide con el borde visible de la foto en
-     TODO el recorrido del wipe, no solo a la mitad. */
+     TODO el recorrido del wipe, no solo a la mitad. Un box-shadow puesto
+     ACÁ queda invisible pase lo que pase: clip-path (a diferencia de
+     overflow:hidden) recorta también la sombra propia del elemento, y la
+     JS de la costura le aplica clip-path en todo momento a este marco
+     -- comprobado con muestreo de píxeles, la sombra que había acá antes
+     no llegaba a pintar un solo píxel fuera del marco. La sombra real va
+     en .galeria-item-photo, ver más abajo. */
   position: relative;
   width: 100%;
   height: 100%;
   border-radius: 2px;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.5), 0 4px 14px rgba(0, 0, 0, 0.35);
 }
 /* sello de la casa, como en la contratapa de una carta antigua: tinta
    blanco y negro, no el círculo a color -- y estampado en una punta, mitad
