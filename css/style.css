@@ -560,6 +560,38 @@ button { font: inherit; }
   display: block;
 }
 
+/* bitácora: anotación de cuaderno, no grilla de métricas -- a propósito
+   sin números grandes ni tarjetas iguales, para que no lea como
+   "3 stats" de landing genérica */
+.hist-bitacora {
+  margin-top: clamp(16px, 2.6svh, 26px);
+  padding-top: clamp(14px, 2.4svh, 24px);
+  border-top: 1px solid rgba(242, 236, 225, 0.13);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  transform: rotate(-0.35deg);
+}
+.hist-bitacora-entrada {
+  margin: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 11px;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(0.82rem, 2vw, 0.95rem);
+  line-height: 1.55;
+  color: #a89787;
+}
+.hist-bitacora-marca {
+  flex: 0 0 auto;
+  font-style: normal;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  color: #c47b3e;
+}
+
 /* ---------- el hilo: cadena de producto real, no puntos ---------- */
 .hilo-grano {
   position: relative;

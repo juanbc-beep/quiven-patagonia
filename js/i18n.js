@@ -95,9 +95,9 @@ window.I18N = (function () {
     histTitulo2: { en: 'With Mariana, a house of their own.' },
     histTexto2: { en: 'With <strong style="color:#f2ece1;font-weight:500">Mariana Trujillo</strong> he opened this house on the Nahuel Huapi. She greets every table; he steps out of the kitchen to talk with anyone who asks.' },
     histTexto3: { en: 'That’s what people talk about when they come back: not the dish — the table.' },
-    histStat1: { en: 'NATIONAL TOURNAMENT' },
-    histStat2: { en: 'COURSES AT THE TABLE' },
-    histStat3: { en: 'HOUSE ON THE LAKE' },
+    histBitacora1: { en: 'First place at the National Chefs’ Tournament, with a childhood dessert.' },
+    histBitacoraHoy: { en: 'Today' },
+    histBitacora2: { en: 'Five courses at the table. One house on the lake.' },
 
     casaKicker: { en: '06 · The House' },
     casaTitulo: { en: 'Upstairs, floor-to-ceiling glass, the lake as a fixed backdrop.' },
