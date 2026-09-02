@@ -640,17 +640,20 @@ button { font: inherit; }
 }
 .qv-cita::after {
   content: '\00BB';
-  display: inline;
-  /* posición relativa (no absoluta) para que siga en el flujo -- pegado
-     al último carácter real, sea cual sea el largo de la cita. El offset
-     es el ancho exacto del propio glifo grande (medido: a 3em, "»" en
-     Piazzolla 200 mide 0.4281× su tamaño de fuente) corrido hacia atrás
-     esa distancia -- así el BORDE DERECHO del grande queda exactamente
-     donde termina el texto real, en vez de solo "cerca". Mismo criterio
-     que la apertura, donde el borde IZQUIERDO coincide con el arranque
-     del renglón 1. */
-  position: relative;
-  left: -0.4281em;
+  /* un offset fijo en em (probado a 1440px) se corría en otros anchos:
+     el glifo grande vive en el flujo normal del texto, pegado sin espacio
+     al último carácter real -- si en ESE renglón puntual no queda hueco
+     para sus 3em, salta entero a un renglón nuevo y aparece en cualquier
+     lado. Ancho:0 + overflow visible saca el glifo del cálculo de wrap
+     por completo (ocupa CERO espacio real, nunca puede no entrar) y
+     text-align:right lo hace crecer hacia la izquierda desde ese punto
+     cero -- que es exactamente donde termina el texto real. Sin medir
+     nada a mano, y ya no depende del ancho de pantalla. */
+  display: inline-block;
+  width: 0;
+  overflow: visible;
+  white-space: nowrap;
+  text-align: right;
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
