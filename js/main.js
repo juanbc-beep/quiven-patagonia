@@ -149,6 +149,11 @@ const App = {
     if (this.refrescarVoces) this.refrescarVoces();
     if (this.refrescarHistoria) this.refrescarHistoria();
     this._etapa = -1;
+    // pintarDescenso tiene una guarda "ya asentada" que corta la función antes
+    // de tocar el texto si la posición de scroll no cambió desde el último
+    // frame -- resetear solo _etapa no alcanza, hay que resetear _dP también
+    // para que esa guarda no bloquee este repintado forzado sin scroll de por medio.
+    this._dP = undefined;
     this.pintarDescenso(window.scrollY || document.documentElement.scrollTop || 0);
     if (this.capActual != null && this.caps) this.mostrarCap(this.caps[this.capActual]);
   },
