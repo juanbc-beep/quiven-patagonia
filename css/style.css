@@ -604,7 +604,7 @@ button { font: inherit; }
 .hist-bitacora-marca {
   flex: 0 0 auto;
   font-style: normal;
-  font-size: 0.66rem;
+  font-size: 0.72rem;
   letter-spacing: 0.1em;
   color: var(--dorado-oscuro);
 }
