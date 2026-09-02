@@ -50,7 +50,7 @@ window.I18N = (function () {
     galeriaZona12: { en: 'VALLEY' },
     galeriaZona13: { en: 'VALLEY' },
     galeriaZona14: { en: 'VALLEY' },
-    galeriaDesc1: { en: '“The first bite is always cold, so everything after it has room to grow.”' },
+    galeriaDesc1: { en: '“The first bite is cold, so the rest can grow.”' },
     galeriaDesc2: { en: '“A bite meant to be eaten standing, by hand.”' },
     galeriaDesc3: { en: '“King crab barely needs anything else.”' },
     galeriaDesc4: { en: '“Hours of cooking for a two-minute bite.”' },
@@ -63,7 +63,7 @@ window.I18N = (function () {
     galeriaDesc11: { en: '“A finish that asks no permission.”' },
     galeriaDesc12: { en: '“The hazelnut belongs here as much as the lake does.”' },
     galeriaDesc13: { en: '“To close, something small and precise.”' },
-    galeriaDesc14: { en: '“The dessert that closes the table the way the lake closes: sweet, unhurried.”' },
+    galeriaDesc14: { en: '“Closes the table the way the lake closes: unhurried.”' },
 
     credencialesAria: { en: 'House credentials' },
     cred0: { en: '<svg viewBox="0 0 28 16" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="7" cy="8" r="6"></circle><circle cx="21" cy="8" r="6"></circle><path d="M13 6c.6-1 1.4-1 2 0"></path><circle cx="7" cy="8" r="1.6" fill="currentColor" stroke="none"></circle><circle cx="21" cy="8" r="1.6" fill="currentColor" stroke="none"></circle></svg>Travellers\' Choice 2021 · Tripadvisor' },

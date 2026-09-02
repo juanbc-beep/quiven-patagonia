@@ -1054,6 +1054,22 @@ button { font: inherit; }
   /* mismo preset del carrusel de El Menú de Pasos -- coherencia visual entre
      las fotos "de vidriera" del sitio, no cada una con su propio tratamiento */
   filter: saturate(1.05) contrast(1.03);
+  transform: scale(1);
+}
+/* Ken Burns lento, solo en la <img>, recortado por el overflow:hidden de
+   .galeria-item-frame -- .galeria-item-photo (el tamaño/posición que ya
+   arreglamos) y el sello fijo de arriba no se enteran de este transform,
+   así que no lo pueden volver a romper. Arranca de nuevo cada vez que la
+   foto vuelve a asentarse como la actual (se saca y se pone la clase). */
+.galeria-item-photo.is-asentado img {
+  animation: galeriaZoomLento 16s cubic-bezier(.3, 0, .4, 1) forwards;
+}
+@keyframes galeriaZoomLento {
+  from { transform: scale(1); }
+  to { transform: scale(1.07); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .galeria-item-photo.is-asentado img { animation: none; }
 }
 /* costura que viaja por el borde de la cortina al pasar de una foto a la
    siguiente -- mismo lenguaje que el separador de capítulos de La Historia

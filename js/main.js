@@ -1423,6 +1423,7 @@ const App = {
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
     const nombres = items.map(it => it.querySelector('.galeria-info'));
+    const fotos = items.map(it => it.querySelector('.galeria-item-photo'));
     const numEls = items.map(it => it.querySelector('.galeria-num'));
     // "PLATO 07 · DE 14" -- mismo lenguaje que "PASO 01 · DE 05" en El Menú
     // de Pasos, para que la galería se lea como parte del mismo sistema de
@@ -1567,6 +1568,12 @@ const App = {
         // juntos, vía transition-delay en CSS -- no hace falta más trabajo
         // por frame acá, un solo toggle de clase alcanza.
         nombres.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
+        // Ken Burns lento solo en la foto que queda asentada como la actual
+        // -- un solo toggle de clase, la animación (recortada por el
+        // overflow:hidden de .galeria-item-frame) corre por CSS. No toca
+        // tamaño ni posición de .galeria-item-photo, así que no puede
+        // volver a desalinear las fotos ni el sello fijo.
+        fotos.forEach((el, i) => { if (el) el.classList.toggle('is-asentado', i === idx); });
       }
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(pintarGaleria); };
