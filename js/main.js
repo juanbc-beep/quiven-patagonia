@@ -1317,6 +1317,7 @@ const App = {
     // altura real de la foto y la costura se desalinea del corte -- ver
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
+    const nombres = items.map(it => it.querySelector('.galeria-nombre'));
     let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
@@ -1367,9 +1368,13 @@ const App = {
         : 'scale(1)';
       items.forEach((it, n2) => {
         const fr = frames[n2];
+        const nom = nombres[n2];
         if (n2 === i) {
           it.style.opacity = '1';
           if (fr) fr.style.clipPath = 'inset(0 0 0 0)';
+          // el nombre acompaña la costura: se apaga a medida que la próxima
+          // foto lo tapa, en vez de desaparecer de golpe
+          if (nom) nom.style.opacity = String(1 - wipe);
           it.style.transform = transformCapa(n2);
           it.style.zIndex = '1';
           it.style.pointerEvents = idx === i ? 'auto' : 'none';
@@ -1379,11 +1384,15 @@ const App = {
           // z-index explícito: el orden del DOM no alcanza para garantizar
           // que esta capa quede arriba de la que se está por tapar
           if (fr) fr.style.clipPath = 'inset(0 0 ' + ((1 - wipe) * 100) + '% 0)';
+          // el nombre del plato que entra se revela con el mismo ritmo que
+          // la foto, no de golpe: la costura "trae" ambas cosas juntas
+          if (nom) nom.style.opacity = String(wipe);
           it.style.transform = transformCapa(n2);
           it.style.zIndex = '2';
           it.style.pointerEvents = idx === i + 1 ? 'auto' : 'none';
         } else {
           it.style.opacity = '0';
+          if (nom) nom.style.opacity = '0';
           it.style.zIndex = '0';
           it.style.pointerEvents = 'none';
         }
