@@ -617,35 +617,20 @@ button { font: inherit; }
 /* comilla decorativa: la cita misma es la textura -- un «» propio, mucho más
    grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
    los mismos signos con los que ya abre y cierra cada cita, a otra escala.
-   La apertura se ancla por CSS puro a la esquina del bloque (el renglón 1
-   siempre arranca ahí, sea cual sea el contenido). El cierre es distinto:
-   la última línea casi nunca llega hasta el borde derecho, y CUALQUIER
-   truco de CSS para "pegarlo sin ocupar espacio" (probados: offset fijo
-   en em, ancho:0 con overflow visible) terminaba dependiendo de motor de
-   render/ancho de pantalla/timing de carga de la fuente -- se corría en
-   algunos casos y no en otros. Por eso el cierre se posiciona con JS real
-   (ver posicionarComillas() en main.js), midiendo dónde termina el texto
-   real en el momento exacto de pintar, no adivinándolo por CSS. */
+   Las dos marcas se posicionan con JS real (ver posicionarComillas() en
+   main.js), midiendo dónde arranca y dónde termina el texto real en el
+   momento exacto de pintar -- un « anclado por CSS puro a la esquina del
+   bloque asume que el renglón 1 arranca ahí, cierto para texto alineado a
+   la izquierda pero FALSO para texto centrado (el interludio tipográfico):
+   ahí el « quedaba lejos de donde el texto realmente arranca. Mismo
+   problema que ya tuvo el cierre con offsets fijos en CSS -- la solución
+   real es medir, no asumir alineación. */
 .qv-cita { position: relative; }
-.qv-cita::before {
-  content: '\00AB';
-  position: absolute;
-  left: -0.06em;
-  top: -0.24em;
-  font-family: 'Piazzolla', serif;
-  font-style: normal;
-  font-weight: 200;
-  font-size: 3em;
-  line-height: 1;
-  color: rgb(var(--dorado-rgb) / 0.16);
-  pointer-events: none;
-  user-select: none;
-}
+.qv-cita-abre,
 .qv-cita-cierre {
   position: absolute;
   left: 0;
   top: 0;
-  transform: translate(-100%, -50%);
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
@@ -655,6 +640,8 @@ button { font: inherit; }
   pointer-events: none;
   user-select: none;
 }
+.qv-cita-abre { transform: translate(0, -50%); }
+.qv-cita-cierre { transform: translate(-100%, -50%); }
 .hist-caption {
   font-size: clamp(0.58rem, 1.7vw, 0.66rem);
   letter-spacing: 0.14em;

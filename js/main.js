@@ -195,7 +195,7 @@ const App = {
     let tResize;
     this.onResize = () => {
       clearTimeout(tResize);
-      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this._paraDatos = undefined; this._capsTops = null; this.pintar(); this.posicionarComillas(); }, 150);
+      tResize = setTimeout(() => { this.calcMedidas(); this._dGeom = null; this._paraDatos = undefined; this._capsTops = null; this._interludioTop = undefined; this.pintar(); this.posicionarComillas(); }, 150);
     };
     window.addEventListener('resize', this.onResize);
     // fuentes/imágenes que terminan de cargar después del primer pintado
@@ -253,36 +253,59 @@ const App = {
     }
   },
 
-  /* ---------- cierre de comillas decorativas: medido, no adivinado.
-     Dos técnicas de CSS puro (offset fijo en em, después ancho:0 con
-     overflow visible) para pegar el « grande al final real del texto
-     terminaron dependiendo del motor de render, del ancho de pantalla o
-     de si la fuente ya había cargado en el momento en que el navegador
-     decidía dónde cortar el renglón -- se corría en algunos casos y no en
-     otros. Acá se mide con el DOM real en el momento exacto de pintar
-     (Range.getClientRects() sobre todo el contenido salvo la marca misma),
-     así no depende de nada de eso. Se llama de nuevo cada vez que el
-     contenido de una cita puede haber cambiado: ES/EN, cambio de paso del
-     menú, resize. */
-  posicionarComillas() {
-    all('.qv-cita').forEach(el => {
-      let marca = el.querySelector(':scope > .qv-cita-cierre');
-      if (!marca) {
-        marca = document.createElement('span');
-        marca.className = 'qv-cita-cierre';
-        marca.setAttribute('aria-hidden', 'true');
-        marca.textContent = '»';
-        el.appendChild(marca);
+  /* ---------- comillas decorativas «»: medidas, no adivinadas.
+     Un « anclado por CSS puro a la esquina del bloque asume que el
+     renglón 1 arranca ahí -- cierto para texto alineado a la izquierda,
+     falso para texto centrado (el interludio tipográfico). Y para el
+     cierre, dos técnicas de CSS puro (offset fijo en em, después ancho:0
+     con overflow visible) terminaron dependiendo del motor de render, el
+     ancho de pantalla o el timing de carga de la fuente. Acá las dos
+     marcas se miden con el DOM real en el momento exacto de pintar
+     (Range.getClientRects() sobre el contenido real, sin las marcas),
+     así ninguna de las dos depende de asumir nada sobre alineación,
+     ancho o fuente. Se llama de nuevo cada vez que el contenido de una
+     cita puede haber cambiado: ES/EN, cambio de paso del menú, resize. */
+  // objetivo opcional: un solo elemento .qv-cita puntual (ej. el cambio de
+  // paso del menú, que no tiene por qué tocar ninguna otra cita del sitio).
+  // Sin objetivo, recalcula todas -- pero OJO: llamarla en modo "todas"
+  // antes de que una cita puntual haya terminado su propio setup (ej. el
+  // recorte en palabras de Historia) es lo que causó un bug real: esta
+  // función ya le había agregado sus marcas a el.textContent, y
+  // splitPalabras() las leyó como si fueran parte del texto real, horneando
+  // un "»»" para siempre en el DOM. Por eso setPaso() abajo pasa SIEMPRE
+  // el elemento puntual, nunca la variante global.
+  posicionarComillas(objetivo) {
+    const lista = objetivo ? [objetivo] : all('.qv-cita');
+    lista.forEach(el => {
+      let abre = el.querySelector(':scope > .qv-cita-abre');
+      if (!abre) {
+        abre = document.createElement('span');
+        abre.className = 'qv-cita-abre';
+        abre.setAttribute('aria-hidden', 'true');
+        abre.textContent = '«';
+        el.insertBefore(abre, el.firstChild);
+      }
+      let cierre = el.querySelector(':scope > .qv-cita-cierre');
+      if (!cierre) {
+        cierre = document.createElement('span');
+        cierre.className = 'qv-cita-cierre';
+        cierre.setAttribute('aria-hidden', 'true');
+        cierre.textContent = '»';
+        el.appendChild(cierre);
       }
       const range = document.createRange();
       range.selectNodeContents(el);
-      range.setEndBefore(marca);
+      range.setStartAfter(abre);
+      range.setEndBefore(cierre);
       const rects = range.getClientRects();
       if (!rects.length) return;
+      const primera = rects[0];
       const ultima = rects[rects.length - 1];
       const elRect = el.getBoundingClientRect();
-      marca.style.left = (ultima.right - elRect.left) + 'px';
-      marca.style.top = (ultima.top - elRect.top + ultima.height / 2) + 'px';
+      abre.style.left = (primera.left - elRect.left) + 'px';
+      abre.style.top = (primera.top - elRect.top + primera.height / 2) + 'px';
+      cierre.style.left = (ultima.right - elRect.left) + 'px';
+      cierre.style.top = (ultima.top - elRect.top + ultima.height / 2) + 'px';
     });
   },
 
@@ -800,7 +823,9 @@ const App = {
         movilFill: q('[data-role="movil-fill"]'),
         arriba: q('[data-role="volver-arriba"]'),
         nav: q('[data-role="nav"]'),
-        grano: q('[data-role="grano"]')
+        grano: q('[data-role="grano"]'),
+        interludio: q('[data-role="interludio"]'),
+        interludioTexto: q('.qv-interludio-cita')
       };
     }
     const pe = this._pEls;
@@ -844,10 +869,41 @@ const App = {
 
     this.parallax(y);
     this.pintarDescenso(y);
+    this.pintarInterludio(y);
     if (pe.grano) {
       const base = PROPS.grano != null ? PROPS.grano : 0.05;
       pe.grano.style.opacity = String(base + (this.granoAvance || 0) * 0.15);
     }
+  },
+
+  /* ---------- interludio tipográfico: tiro de foco atado al scroll -- la
+     única sección sin foto necesitaba su propio gesto de cámara, no solo
+     un fundido de entrada fijo. El texto entra desenfocado y se enfoca del
+     todo recién cuando la franja queda centrada en la pantalla (el punto
+     en el que alguien scrolleando despacio se detendría a leerla), y se
+     desenfoca de nuevo al irse -- como un rack focus, no un fundido. ---------- */
+  pintarInterludio(y) {
+    const banda = this._pEls.interludio;
+    const texto = this._pEls.interludioTexto;
+    if (!banda || !texto || this.reduced) return;
+    if (this._interludioTop === undefined) {
+      this._interludioTop = banda.offsetTop;
+      this._interludioAlto = banda.offsetHeight;
+    }
+    const centroBanda = this._interludioTop + this._interludioAlto / 2;
+    const centroPantalla = y + window.innerHeight / 2;
+    const dist = Math.abs(centroBanda - centroPantalla);
+    const foco = clamp(1 - dist / (window.innerHeight * 0.55), 0, 1);
+    if (foco === this._interludioFoco) return;
+    this._interludioFoco = foco;
+    // solo propiedades que no cambian el ancho renderizado del texto --
+    // letter-spacing lo hacía, y como esto corre en cada scroll tick sin
+    // volver a llamar a posicionarComillas() (sería carísimo medir en cada
+    // frame), la comilla de cierre quedaba pegada a una posición vieja en
+    // cuanto el tracking cambiaba: el mismo bug que ya se había cazado,
+    // de nuevo, por una razón nueva.
+    texto.style.filter = 'blur(' + ((1 - foco) * 5).toFixed(2) + 'px)';
+    texto.style.opacity = String((0.35 + foco * 0.65).toFixed(2));
   },
 
   mostrarCap(sec) {
@@ -1379,8 +1435,10 @@ const App = {
         f.style.transform = n === i ? 'translateX(10px)' : 'none';
         f.style.borderBottomColor = n === i ? 'rgba(224,164,95,0.5)' : 'rgba(242,236,225,0.09)';
       });
-      // cita.textContent de arriba borró la marca de cierre del paso anterior
-      this.posicionarComillas();
+      // cita.textContent de arriba borró la marca de cierre del paso anterior --
+      // puntual a esta cita, nunca la variante global (ver comentario en la
+      // función: acá corre antes que historia(), tocar todas rompía Historia)
+      if (cita) this.posicionarComillas(cita);
     };
     this.ciclarPaso = () => {
       if (this.tPaso) clearInterval(this.tPaso);
