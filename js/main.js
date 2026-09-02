@@ -429,6 +429,25 @@ const App = {
     const zona = q('[data-role="descenso"]');
     if (!zona) return;
     const P_PASOS = [0, 0.37, 0.55, 0.73, 0.95];
+    // una etapa <-> una capa. Ojo: aunque P_PASOS ya apunta al centro de la
+    // ventana en la que CADA foto individualmente llega a opacity:1, las
+    // ventanas de entrada/salida de las capas vecinas se pisan A PROPÓSITO
+    // (así se ve como un crossfade continuo mientras se scrollea de
+    // verdad) -- en ese mismo p, la foto de al lado también tiene opacidad
+    // parcial (ej. ~15%), invisible en un scroll fluido pero muy visible
+    // como una foto "fantasma" superpuesta cuando el scroll queda
+    // DETENIDO ahí. pintarDescenso() sigue siendo la fuente de verdad
+    // mientras se scrollea; acá, una vez que el paso termina de asentarse,
+    // se pisa esa cuenta con un estado limpio: 1 la capa actual, 0 todas
+    // las demás -- sin tocar la fórmula continua, que sigue sirviendo
+    // igual para el auto-descenso y cualquier scroll libre.
+    const LAYERS = ['d-fondo', 'd-1', 'd-2', 'd-3', 'd-4'];
+    const asentarLimpio = i => {
+      LAYERS.forEach((role, idx) => {
+        const el = q('[data-role="' + role + '"]');
+        if (el) el.style.opacity = idx === i ? '1' : '0';
+      });
+    };
     let bloqueado = false;
 
     const geom = () => ({
@@ -457,9 +476,34 @@ const App = {
     // navegadores se estira bastante para este salto (~500-900px), dejando
     // el crossfade de opacidad (atado 1:1 al scroll) sintiéndose lento y
     // "blando" en vez de un cambio de foto rápido y decidido.
+    // los scrollTo() del tween de abajo generan su propia cola de eventos
+    // "scroll" -- el navegador los va despachando con cierto atraso, no
+    // los termina de emitir todos apenas el tween deja de llamar scrollTo.
+    // Cada uno de esos eventos tardíos vuelve a correr pintarDescenso con
+    // la cuenta "sucia" (foto vecina asomando), pisando encima cualquier
+    // limpieza que se aplique demasiado pronto -- confirmado midiendo.
+    // "scrollend" en teoría avisa cuando el scroll de verdad termina, pero
+    // acá dispara VARIAS veces durante un mismo tween propio (cada llamada
+    // a scrollTo() parece contar como su propio "gesto" para el navegador,
+    // no solo la última) -- confirmado con logging directo. Por eso NO se
+    // limpia "etapaEsperada" al primer disparo: cada scrollend (o cada
+    // vuelta del respaldo) simplemente reafirma la capa objetivo actual,
+    // sin importar cuántas veces haga falta -- el último disparo, una vez
+    // que el scroll de verdad se asienta en el destino final, es el que
+    // queda como última palabra.
+    let etapaEsperada = null;
+    window.addEventListener('scrollend', () => {
+      if (etapaEsperada != null) asentarLimpio(etapaEsperada);
+    });
     const irAEtapa = i => {
       const { top, alto } = geom();
       const destino = top + P_PASOS[i] * alto;
+      etapaEsperada = i;
+      // respaldo por si el navegador no dispara "scrollend" a tiempo (o
+      // nunca): reafirma la capa objetivo un rato después de terminado
+      // el tween, cuando ya no debería quedar ningún evento de scroll
+      // atrasado por drenar.
+      setTimeout(() => { if (etapaEsperada === i) asentarLimpio(i); }, 700);
       if (App.reduced) { window.scrollTo(0, destino); return; }
       bloqueado = true;
       const y0 = yActual();
