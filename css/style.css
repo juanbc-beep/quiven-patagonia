@@ -598,12 +598,19 @@ button { font: inherit; }
 }
 /* comilla decorativa: la cita misma es la textura -- un «» propio, mucho más
    grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
-   los mismos signos con los que ya abre y cierra cada cita, a otra escala:
-   apertura arriba-izquierda, cierre abajo-derecha. */
+   los mismos signos con los que ya abre y cierra cada cita, a otra escala.
+   La apertura sí puede anclarse a la esquina del bloque (el renglón 1
+   siempre arranca ahí) -- pero la última línea casi nunca llega hasta el
+   borde derecho, así que anclar el cierre a esa esquina lo dejaba flotando
+   lejos del punto donde el texto realmente termina. El cierre va en el
+   flujo normal, pegado al último carácter real, sea cual sea el largo
+   de la cita. */
 .qv-cita { position: relative; }
-.qv-cita::before,
-.qv-cita::after {
+.qv-cita::before {
+  content: '\00AB';
   position: absolute;
+  left: -0.06em;
+  top: -0.24em;
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
@@ -613,15 +620,19 @@ button { font: inherit; }
   pointer-events: none;
   user-select: none;
 }
-.qv-cita::before {
-  content: '\00AB';
-  left: -0.06em;
-  top: -0.24em;
-}
 .qv-cita::after {
   content: '\00BB';
-  right: -0.06em;
-  bottom: -0.4em;
+  display: inline;
+  font-family: 'Piazzolla', serif;
+  font-style: normal;
+  font-weight: 200;
+  font-size: 1.7em;
+  line-height: 0;
+  margin-left: 0.06em;
+  vertical-align: -0.22em;
+  color: rgb(var(--dorado-rgb) / 0.4);
+  pointer-events: none;
+  user-select: none;
 }
 .hist-caption {
   font-size: clamp(0.58rem, 1.7vw, 0.66rem);
