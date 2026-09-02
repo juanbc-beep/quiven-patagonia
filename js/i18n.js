@@ -78,6 +78,8 @@ window.I18N = (function () {
     terrTitulo: { en: 'Four pantries, one single landscape.' },
     terrTexto: { en: 'There’s no fixed menu here: there’s a map. The sea delivers twice a week, the hillside whenever it wants, the garden whenever it can. The menu is written with whatever arrives.' },
 
+    interludioCita: { en: '“Before it’s a dish, all of this was territory.”' },
+
     fuegoKicker: { en: '03 · The Fire' },
     fuegoTitulo: { en: '<span class="clip-inner">Here, the ingredient stops being an ingredient.</span>' },
     fuegoTexto: { en: 'A night of service isn’t one thing: it’s four moments, and none of them can be rushed. Pick a time on the clock.' },
@@ -108,6 +110,9 @@ window.I18N = (function () {
     vocesTitulo: { en: '<span class="clip-inner">No one gave them a star. Their guests did anyway.</span>' },
     vocesTexto: { en: 'The Michelin guide hasn’t reached Patagonia yet. Those who have — and who’ve eaten across half the world — left this in writing.' },
     vocesResenas: { en: 'GUEST<br>REVIEWS' },
+
+    llegarKicker: { es: 'CÓMO LLEGAR', en: 'HOW TO GET HERE' },
+    llegarBtn: { es: 'VER EN EL MAPA', en: 'VIEW ON MAP' },
 
     eventosKicker: { en: '08 · Events & Catering' },
     eventosTitulo: { en: 'The kitchen leaves home too.' },
