@@ -843,24 +843,20 @@ button { font: inherit; }
   will-change: opacity, clip-path, transform;
   transition: transform 0.4s cubic-bezier(.16, 1, .3, 1);
 }
-/* nombre del plato, mismo lenguaje que el nombre del chef en La Historia:
-   serif itálica + una costura corta encima, en vez de una etiqueta plana */
-.galeria-nombre {
+/* nombre + descripción del plato: misma jerarquía que "El Menú de Pasos"
+   (paso-titulo/paso-texto) -- título grande en Fraunces, cuerpo chico
+   debajo -- en vez de una sola línea itálica chica y plana. La costura
+   corta arriba es el mismo lenguaje del separador de capítulos de
+   La Historia. */
+.galeria-info {
   position: relative;
   margin: 0;
-  padding-top: clamp(12px, 2svh, 18px);
-  max-width: 78vw;
+  padding-top: clamp(14px, 2.4svh, 22px);
+  max-width: 82vw;
   text-align: center;
-  font-family: 'Fraunces', serif;
-  font-style: italic;
-  font-weight: 300;
-  font-size: clamp(1rem, 1.4vw + 0.6svh, 1.3rem);
-  line-height: 1.3;
-  color: #f2ece1;
-  text-wrap: pretty;
   opacity: 0;
 }
-.galeria-nombre::before {
+.galeria-info::before {
   content: '';
   position: absolute;
   top: 0;
@@ -869,6 +865,26 @@ button { font: inherit; }
   width: 34px;
   height: 1px;
   background: linear-gradient(90deg, transparent, rgba(224, 164, 95, 0.65), transparent);
+}
+.galeria-nombre {
+  display: block;
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.4rem, 2.8vw + 0.9svh, 2.1rem);
+  line-height: 1.15;
+  color: #f2ece1;
+  text-wrap: pretty;
+}
+.galeria-desc {
+  display: block;
+  margin: clamp(6px, 1.2svh, 10px) auto 0;
+  max-width: 38ch;
+  font-size: clamp(0.78rem, 1.6vw, 0.86rem);
+  font-weight: 300;
+  line-height: 1.6;
+  color: #cbbca9;
+  text-wrap: pretty;
 }
 .galeria-item-frame {
   /* las 14 fotos miden todas lo mismo -- 2:3, la relación que ya tenía la
@@ -940,6 +956,8 @@ button { font: inherit; }
 }
 @media (max-width: 700px) {
   .galeria-item-frame { max-width: 88vw; max-height: 58svh; }
-  .galeria-nombre { font-size: clamp(0.92rem, 3.6vw, 1.08rem); max-width: 84vw; }
+  .galeria-info { max-width: 88vw; }
+  .galeria-nombre { font-size: clamp(1.2rem, 6.4vw, 1.5rem); }
+  .galeria-desc { font-size: 0.8rem; max-width: 34ch; }
   .galeria-hint { display: none; }
 }

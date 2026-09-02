@@ -1317,7 +1317,7 @@ const App = {
     // altura real de la foto y la costura se desalinea del corte -- ver
     // nota más abajo, junto a pintarGaleria.
     const frames = items.map(it => it.querySelector('.galeria-item-frame'));
-    const nombres = items.map(it => it.querySelector('.galeria-nombre'));
+    const nombres = items.map(it => it.querySelector('.galeria-info'));
     let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
