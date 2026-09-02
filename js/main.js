@@ -1273,7 +1273,6 @@ const App = {
     const txt = q('[data-role="paso-texto"]');
     const cita = q('[data-role="paso-cita"]');
     const chips = q('[data-role="paso-chips"]');
-    const fant = q('[data-role="paso-fantasma"]');
     const ondas = q('[data-role="plato-ondas"]');
     const tilt = q('[data-role="plato-tilt"]');
     const sheen = q('[data-role="plato-sheen"]');
@@ -1311,7 +1310,6 @@ const App = {
       }
       if (arco) arco.style.strokeDashoffset = String(314 - 314 * ((i + 1) / PASOS.length));
       if (num) num.textContent = (window.I18N ? window.I18N.t('pasoNumPaso') : 'PASO') + ' 0' + (i + 1) + ' · ' + (window.I18N ? window.I18N.t('pasoNumDe') : 'DE') + ' 0' + PASOS.length;
-      if (fant) fant.textContent = '0' + (i + 1);
       if (tit) tit.textContent = p.n;
       if (txt) txt.textContent = p.d;
       if (cita) cita.textContent = p.c;

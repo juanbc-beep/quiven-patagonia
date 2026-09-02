@@ -584,27 +584,26 @@ button { font: inherit; }
 }
 .hist-chapter.is-in .hist-quote .word { opacity: 1; filter: blur(0); }
 /* capitular: el párrafo que abre el relato de La Historia se distingue por
-   tipografía, no por otro elemento gráfico -- la primera letra en Piazzolla,
-   como en una página editorial, marca "acá empieza la historia" antes de
-   que se lea una sola palabra. */
+   tipografía, no por otro elemento gráfico. A propósito NO es un capitular
+   flotante clásico (float:left que ocupa 2-3 líneas) -- con la altura de
+   línea de este párrafo (1.8) esa técnica dejaba la letra desalineada del
+   renglón y arrastraba la sangría a la segunda línea también. Esta versión
+   es una versal en línea: más grande, mismo renglón que el resto del texto,
+   sin floats ni sangría en ninguna línea. */
 .hist-abre::first-letter {
   font-family: 'Piazzolla', serif;
-  font-weight: 300;
-  font-size: 2.5em;
-  line-height: 0.72;
-  float: left;
-  margin: 0.03em 0.09em 0 0;
+  font-weight: 400;
+  font-size: 1.9em;
   color: var(--dorado);
 }
-/* comilla decorativa: la cita misma es la textura -- un « propio, mucho más
+/* comilla decorativa: la cita misma es la textura -- un «» propio, mucho más
    grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
-   el mismo signo con el que ya abre cada cita, a otra escala. */
+   los mismos signos con los que ya abre y cierra cada cita, a otra escala:
+   apertura arriba-izquierda, cierre abajo-derecha. */
 .qv-cita { position: relative; }
-.qv-cita::before {
-  content: '\00AB';
+.qv-cita::before,
+.qv-cita::after {
   position: absolute;
-  left: -0.06em;
-  top: -0.24em;
   font-family: 'Piazzolla', serif;
   font-style: normal;
   font-weight: 200;
@@ -613,6 +612,16 @@ button { font: inherit; }
   color: rgb(var(--dorado-rgb) / 0.16);
   pointer-events: none;
   user-select: none;
+}
+.qv-cita::before {
+  content: '\00AB';
+  left: -0.06em;
+  top: -0.24em;
+}
+.qv-cita::after {
+  content: '\00BB';
+  right: -0.06em;
+  bottom: -0.4em;
 }
 .hist-caption {
   font-size: clamp(0.58rem, 1.7vw, 0.66rem);
