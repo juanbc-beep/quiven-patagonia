@@ -429,25 +429,19 @@ const App = {
     const zona = q('[data-role="descenso"]');
     if (!zona) return;
     const P_PASOS = [0, 0.37, 0.55, 0.73, 0.95];
-    // una etapa <-> una capa. Ojo: aunque P_PASOS ya apunta al centro de la
-    // ventana en la que CADA foto individualmente llega a opacity:1, las
-    // ventanas de entrada/salida de las capas vecinas se pisan A PROPÓSITO
-    // (así se ve como un crossfade continuo mientras se scrollea de
-    // verdad) -- en ese mismo p, la foto de al lado también tiene opacidad
-    // parcial (ej. ~15%), invisible en un scroll fluido pero muy visible
-    // como una foto "fantasma" superpuesta cuando el scroll queda
-    // DETENIDO ahí. pintarDescenso() sigue siendo la fuente de verdad
-    // mientras se scrollea; acá, una vez que el paso termina de asentarse,
-    // se pisa esa cuenta con un estado limpio: 1 la capa actual, 0 todas
-    // las demás -- sin tocar la fórmula continua, que sigue sirviendo
-    // igual para el auto-descenso y cualquier scroll libre.
-    const LAYERS = ['d-fondo', 'd-1', 'd-2', 'd-3', 'd-4'];
-    const asentarLimpio = i => {
-      LAYERS.forEach((role, idx) => {
-        const el = q('[data-role="' + role + '"]');
-        if (el) el.style.opacity = idx === i ? '1' : '0';
-      });
-    };
+    // una etapa <-> una capa. P_PASOS apunta al centro de la ventana en la
+    // que CADA foto individualmente llega a opacity:1 (ver pintarDescenso,
+    // capas d-1..d-4) -- pero las ventanas de las capas vecinas se pisan a
+    // propósito para que el crossfade se vea fluido mientras se scrollea
+    // de verdad, así que en ese mismo p la foto de al lado también tiene
+    // opacidad parcial. Fundirse() de abajo es el fundido cruzado PROPIO
+    // (con su propio reloj, no atado a la posición de scroll) que
+    // reemplaza a esa cuenta continua mientras un paso está en curso --
+    // así nunca puede quedar una foto vecina asomando, sea cual sea el p
+    // exacto en el que el scroll termine.
+    const LAYERS = ['d-fondo', 'd-1', 'd-2', 'd-3', 'd-4'].map(r => q('[data-role="' + r + '"]'));
+    const TXT = { etiqueta: q('[data-role="d-etiqueta"]'), titulo: q('[data-role="d-titulo"]'), texto: q('[data-role="d-texto"]'), alt: q('[data-role="d-alt"]') };
+    let etapaAsentada = 0;
     let bloqueado = false;
 
     const geom = () => ({
@@ -471,46 +465,86 @@ const App = {
       return y >= top - 2 && y <= top + alto + 2;
     };
 
-    // tween propio en vez de scrollTo({behavior:'smooth'}) -- el smooth
-    // nativo del navegador no permite fijar la duración, y en algunos
-    // navegadores se estira bastante para este salto (~500-900px), dejando
-    // el crossfade de opacidad (atado 1:1 al scroll) sintiéndose lento y
-    // "blando" en vez de un cambio de foto rápido y decidido.
+    const DUR = 480;
+    // fundido cruzado propio: solo toca opacity, en dos capas nada más
+    // (la que sale, la que entra) -- pintarDescenso() no participa de la
+    // opacidad mientras this._descensoPasoActivo está prendido (ver ahí),
+    // así que esto es la única fuente de verdad para esas dos capas
+    // durante el paso, sin importar cuántos eventos de scroll tardíos
+    // lleguen mientras tanto.
+    const fundirCapas = (desde, hacia) => {
+      const elDesde = LAYERS[desde], elHacia = LAYERS[hacia];
+      if (App.reduced) {
+        if (elDesde && desde !== hacia) elDesde.style.opacity = '0';
+        if (elHacia) elHacia.style.opacity = '1';
+        return;
+      }
+      const inicio = performance.now();
+      const tick = now => {
+        const t = clamp((now - inicio) / DUR, 0, 1);
+        if (elDesde && desde !== hacia) elDesde.style.opacity = t < 1 ? String(1 - t) : '0';
+        if (elHacia) elHacia.style.opacity = t < 1 ? String(t) : '1';
+        if (t < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    };
+    // mismo texto/altímetro que pintarDescenso, disparado a mano en el
+    // mismo instante en que arranca el fundido de foto -- antes cambiaba
+    // solo cuando el scroll cruzaba el viejo umbral DESCENSO[].p (bastante
+    // antes de que la foto terminara de formarse), sintiéndose como dos
+    // gestos separados en vez de uno solo.
+    const fundirTexto = i => {
+      const d = DESCENSO[i];
+      [[TXT.etiqueta, d.e], [TXT.titulo, d.t], [TXT.texto, d.x]].forEach(par => {
+        const el = par[0];
+        if (!el) return;
+        if (App.reduced) { el.textContent = par[1]; el.style.opacity = '1'; el.style.transform = 'none'; return; }
+        el.style.transition = 'opacity .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(10px)';
+        setTimeout(() => { if (!el) return; el.textContent = par[1]; el.style.opacity = '1'; el.style.transform = 'none'; }, 180);
+      });
+      if (TXT.alt) App.odometro(TXT.alt, d.km);
+      App._etapa = i;
+    };
+
     // los scrollTo() del tween de abajo generan su propia cola de eventos
-    // "scroll" -- el navegador los va despachando con cierto atraso, no
-    // los termina de emitir todos apenas el tween deja de llamar scrollTo.
-    // Cada uno de esos eventos tardíos vuelve a correr pintarDescenso con
-    // la cuenta "sucia" (foto vecina asomando), pisando encima cualquier
-    // limpieza que se aplique demasiado pronto -- confirmado midiendo.
-    // "scrollend" en teoría avisa cuando el scroll de verdad termina, pero
-    // acá dispara VARIAS veces durante un mismo tween propio (cada llamada
-    // a scrollTo() parece contar como su propio "gesto" para el navegador,
-    // no solo la última) -- confirmado con logging directo. Por eso NO se
-    // limpia "etapaEsperada" al primer disparo: cada scrollend (o cada
-    // vuelta del respaldo) simplemente reafirma la capa objetivo actual,
-    // sin importar cuántas veces haga falta -- el último disparo, una vez
-    // que el scroll de verdad se asienta en el destino final, es el que
-    // queda como última palabra.
-    let etapaEsperada = null;
+    // "scroll" que el navegador despacha con atraso -- mientras dura ese
+    // atraso, this._descensoPasoActivo se mantiene prendido para que
+    // pintarDescenso() no vuelva a tocar la opacidad de las capas por su
+    // cuenta. Apagarla con un timeout fijo no alcanza: el drenaje no
+    // siempre tarda lo mismo (confirmado midiendo, a veces un evento
+    // tardío llegaba después de un timeout de 700ms y volvía a ensuciar
+    // la cuenta). En cambio, cada disparo de "scrollend" reinicia una
+    // cuenta regresiva corta -- recién se apaga la bandera cuando pasan
+    // 250ms SIN ningún scrollend nuevo, sea cual sea cuántos hicieron
+    // falta hasta ahí. Un respaldo más largo cubre el caso raro de que
+    // el navegador no dispare scrollend en absoluto.
+    let pasoEnCurso = null;
+    let liberar = null;
+    const armarLiberacion = ms => {
+      clearTimeout(liberar);
+      liberar = setTimeout(() => { pasoEnCurso = null; App._descensoPasoActivo = false; }, ms);
+    };
     window.addEventListener('scrollend', () => {
-      if (etapaEsperada != null) asentarLimpio(etapaEsperada);
+      if (pasoEnCurso != null) armarLiberacion(250);
     });
     const irAEtapa = i => {
       const { top, alto } = geom();
       const destino = top + P_PASOS[i] * alto;
-      etapaEsperada = i;
-      // respaldo por si el navegador no dispara "scrollend" a tiempo (o
-      // nunca): reafirma la capa objetivo un rato después de terminado
-      // el tween, cuando ya no debería quedar ningún evento de scroll
-      // atrasado por drenar.
-      setTimeout(() => { if (etapaEsperada === i) asentarLimpio(i); }, 700);
+      const previa = etapaAsentada;
+      etapaAsentada = i;
+      pasoEnCurso = i;
+      App._descensoPasoActivo = true;
+      fundirCapas(previa, i);
+      fundirTexto(i);
+      armarLiberacion(1200);
       if (App.reduced) { window.scrollTo(0, destino); return; }
       bloqueado = true;
       const y0 = yActual();
-      const dur = 380;
       const inicio = performance.now();
       const paso = now => {
-        const t = clamp((now - inicio) / dur, 0, 1);
+        const t = clamp((now - inicio) / DUR, 0, 1);
         const ease = 1 - Math.pow(1 - t, 3);
         window.scrollTo(0, y0 + (destino - y0) * ease);
         if (t < 1) requestAnimationFrame(paso);
@@ -828,8 +862,14 @@ const App = {
 
     // la foto de fondo (sobrevuelo inicial) se queda de entrada y se apaga
     // recién cuando la primera foto real (d-1) ya está tomando su lugar --
-    // el zoom lento es CSS puro (qvFondoZoom), acá solo se controla la opacidad
-    if (els.fondo) els.fondo.style.opacity = String(1 - clamp((p - 0.16) / 0.22, 0, 1));
+    // el zoom lento es CSS puro (qvFondoZoom), acá solo se controla la opacidad.
+    // Salvo mientras iniciarDescensoPorPasos() está corriendo su propio
+    // fundido cruzado (this._descensoPasoActivo) -- ahí la opacidad de
+    // fondo/capas la maneja ese fundido con su propio reloj, no la
+    // posición de scroll (ver nota ahí: por diseño las ventanas de las
+    // capas vecinas se pisan a propósito, y aterrizar en cualquier p fijo
+    // siempre deja a la vecina asomando un poco).
+    if (els.fondo && !this._descensoPasoActivo) els.fondo.style.opacity = String(1 - clamp((p - 0.16) / 0.22, 0, 1));
     // neblina de altura: un velo frío se despeja en la luz cálida de la costa
     // a medida que se avanza -- redondeado grueso a propósito: reescribir un
     // gradient de pantalla completa con un string nuevo en CADA frame de scroll
@@ -856,17 +896,27 @@ const App = {
       const el = c[0];
       if (!el) return;
       const entra = clamp((p - c[1]) / 0.2, 0, 1);
-      const sale = i < els.capas.length - 1 ? clamp((p - c[2]) / 0.18, 0, 1) : 0;
-      el.style.opacity = String(entra * (1 - sale));
+      // la escala/deriva sí se dejan corriendo con el scroll incluso durante
+      // el fundido propio -- da un poco de vida al acercamiento sin
+      // arriesgar el fantasma de opacidad que sí hay que evitar
       const escala = c[3] - clamp((p - c[1]) / (c[5] || 0.4), 0, 1) * c[4];
       const deriva = (1 - entra) * 26;
       el.style.transform = 'scale(' + escala + ') translateY(' + deriva + 'px)';
+      if (this._descensoPasoActivo) return;
+      const sale = i < els.capas.length - 1 ? clamp((p - c[2]) / 0.18, 0, 1) : 0;
+      el.style.opacity = String(entra * (1 - sale));
     });
 
     let etapa = 0;
     DESCENSO.forEach((d, i) => { if (p >= d.p) etapa = i; });
+    // mientras el fundido propio de iniciarDescensoPorPasos() está corriendo,
+    // el cambio de texto lo dispara ese mismo fundido (sincronizado con la
+    // foto, no con este umbral) -- acá solo se actualiza this._etapa para
+    // que, apenas termine, este bloque no dispare una segunda animación de
+    // texto redundante en cuanto vuelva a correr con el próximo scroll.
     if (etapa !== this._etapa) {
       this._etapa = etapa;
+      if (this._descensoPasoActivo) return;
       const d = DESCENSO[etapa];
       [[els.etiqueta, d.e], [els.titulo, d.t], [els.texto, d.x]].forEach(par => {
         const el = par[0];
