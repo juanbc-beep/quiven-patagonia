@@ -1082,11 +1082,7 @@ const App = {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.cursor = e.n;
-      // único acento frío del sitio: el nodo LAGO se distingue del resto
-      // (siempre dorado) porque es agua, no tierra -- el color hace el
-      // trabajo que ninguna otra pista visual estaba haciendo
-      const esLago = e.n === 'LAGO';
-      b.style.cssText = 'position:absolute;left:' + (50 + Math.cos(ang) * 42) + '%;top:' + (50 + Math.sin(ang) * 47) + '%;transform:translate(-50%,-50%);background:#0d0b0a;border:1px solid ' + (esLago ? 'rgba(95,163,176,0.45)' : 'rgba(224,164,95,0.4)') + ';color:#cbbca9;font-family:inherit;font-weight:300;font-size:0.6875rem;letter-spacing:0.16em;padding:13px 13px;border-radius:999px;cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);white-space:nowrap';
+      b.style.cssText = 'position:absolute;left:' + (50 + Math.cos(ang) * 42) + '%;top:' + (50 + Math.sin(ang) * 47) + '%;transform:translate(-50%,-50%);background:#0d0b0a;border:1px solid rgba(224,164,95,0.4);color:#cbbca9;font-family:inherit;font-weight:300;font-size:0.6875rem;letter-spacing:0.16em;padding:13px 13px;border-radius:999px;cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);white-space:nowrap';
       b.textContent = e.n;
       const act = () => { this.setEje(i); this.ciclarEje(); };
       b.addEventListener('click', act);
@@ -1117,10 +1113,9 @@ const App = {
         im.style.opacity = n === i ? '1' : '0';
         im.style.transform = n === i ? 'scale(1)' : 'scale(1.08)';
       });
-      const esLago = EJES[i].n === 'LAGO';
       if (ondas && !this.reduced) {
         const s = document.createElement('span');
-        s.style.cssText = 'width:54%;aspect-ratio:1/1;border:1px solid ' + (esLago ? 'rgba(95,163,176,0.4)' : 'rgba(224,164,95,0.4)') + ';border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
+        s.style.cssText = 'width:54%;aspect-ratio:1/1;border:1px solid rgba(224,164,95,0.4);border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
         ondas.appendChild(s);
         setTimeout(() => s.remove(), 2400);
       }
@@ -1131,10 +1126,9 @@ const App = {
       if (terrArco) terrArco.style.strokeDashoffset = String(-i * 69.1);
       nodoEls.forEach((b, n) => {
         const on = n === i;
-        const lago = EJES[n].n === 'LAGO';
-        b.style.background = on ? (lago ? '#5fa3b0' : '#c47b3e') : '#0d0b0a';
+        b.style.background = on ? '#c47b3e' : '#0d0b0a';
         b.style.color = on ? '#0d0b0a' : '#cbbca9';
-        b.style.borderColor = on ? (lago ? '#5fa3b0' : '#e0a45f') : (lago ? 'rgba(95,163,176,0.45)' : 'rgba(224,164,95,0.4)');
+        b.style.borderColor = on ? '#e0a45f' : 'rgba(224,164,95,0.4)';
         b.style.transform = 'translate(-50%,-50%) scale(' + (on ? 1.08 : 1) + ')';
       });
       filaEls.forEach((f, n) => { f.style.color = n === i ? '#f2ece1' : '#8d7f70'; });

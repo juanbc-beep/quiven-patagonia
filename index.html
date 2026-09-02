@@ -44,7 +44,7 @@
 <!-- poster del video del portal: es lo primero que se ve (LCP real), antes de
      que el video mismo termine de bajar -- se adelanta su descarga -->
 <link rel="preload" href="assets/img/2018-03-05-PHOTO-00000187-1024x683.webp" as="image" fetchpriority="high">
-<link rel="stylesheet" href="css/style.css?v=58">
+<link rel="stylesheet" href="css/style.css?v=59">
 <script defer src="js/quiven-3d.js?v=32"></script>
 <script type="application/ld+json">
 {
@@ -323,20 +323,6 @@
         </div>
       </div>
     </section>
-
-    <!-- interludio panorámico: el único momento del sitio con movimiento de
-         cámara horizontal, no vertical -- a propósito no tiene data-cap (no
-         es un capítulo, es una pausa entre dos) ni suma texto nuevo, solo
-         un respiro antes de bajar el ritmo hacia El Fuego -->
-    <div style="position:relative;height:38vh;min-height:220px;overflow:hidden;background:#05060a" aria-hidden="true">
-      <div class="qv-pan-interludio" style="position:absolute;inset:0;width:132%">
-        <picture style="display:block;width:100%;height:100%">
-          <source type="image/avif" srcset="assets/img/panorama-llaollao.avif">
-          <img src="assets/img/panorama-llaollao.webp" width="1672" height="941" loading="lazy" decoding="async" alt="" style="width:100%;height:100%;object-fit:cover;display:block;filter:brightness(0.72) saturate(0.95)">
-        </picture>
-      </div>
-      <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(5,6,10,0.55) 0%,rgba(5,6,10,0.1) 32%,rgba(5,6,10,0.1) 68%,rgba(5,6,10,0.6) 100%)"></div>
-    </div>
 
     <section data-cap="Fuego" data-num="03" data-estado="Brasa" data-viaje="assets/img/2018-04-03-PHOTO-00000825.webp" data-screen-label="03 Fuego" style="position:relative;overflow:hidden;background:#0a0705">
       <video data-role="fuego-video" muted loop playsinline preload="none" poster="assets/img/2018-04-03-PHOTO-00000814.webp" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;filter:saturate(0.7) brightness(0.34) contrast(1.1)"></video>
@@ -718,7 +704,7 @@
 </div>
 
 <script defer src="js/i18n.js?v=39"></script>
-<script defer src="js/main.js?v=62"></script>
+<script defer src="js/main.js?v=63"></script>
 <!-- Analítica: GoatCounter (gratuito, sin cookies, no vende datos). Crear la
      cuenta en https://www.goatcounter.com/ y reemplazar CODIGO por el
      subdominio real que asigna -- sin eso este script no envía nada porque
