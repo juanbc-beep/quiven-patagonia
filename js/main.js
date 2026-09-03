@@ -2143,6 +2143,13 @@ const App = {
       // esté en el DOM con layout, todavía no es lo que el visitante ve.
       overlay.style.opacity = '0';
       overlay.classList.add('is-open');
+      // recién ACÁ el overlay deja de ser display:none -- centrarMobile()
+      // ya había corrido una vez al cargar la página (más arriba), pero en
+      // ese momento medía todo en cero (todavía oculto) y no hacía nada.
+      // Sin este segundo llamado, el padding calculado quedaba pegado para
+      // siempre en el mínimo de CSS, como si el cálculo nunca hubiera
+      // corrido -- exactamente lo mismo que se veía ANTES de agregarlo.
+      centrarMobile();
       scroller.scrollTop = 0;
       // "loading=lazy" no sirve acá: las 14 fotos están apiladas en el mismo
       // punto dentro de una capa que hasta ahora arrancaba display:none, así
