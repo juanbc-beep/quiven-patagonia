@@ -2007,22 +2007,25 @@ const App = {
       // no necesita el mismo teatro que entrar.
       //
       // La primera apertura de la sesión suma la frase ("Antes de la
-      // mesa, la mirada."). Ojo con la versión anterior de esto: la frase
-      // vivía DENTRO de la cortina, así que el mismo clip-path que la
-      // revelaba también la recortaba apenas el borde la pasaba de largo
-      // -- se armaba y al toque se borraba, al revés de lo que tiene que
-      // pasar. Ahora es un elemento aparte con su propio fundido de
-      // opacidad (0 → 1 → 0), que corre MIENTRAS la cortina sigue bajando
-      // (mismo reloj, no un paso separado antes del wipe) pero sin
-      // depender de en qué altura esté el borde en cada momento -- se
-      // arma, se sostiene el tiempo suficiente para leerla y recién se
-      // apaga sola al final, nunca "cortada" a mitad de camino. Por eso
-      // esta versión es bastante más lenta (2600ms vs. 700ms) -- lo
-      // anterior (1700ms con revelado palabra por palabra) todavía se
-      // leía apurado. Repetir esos ~2.6s cada vez que alguien abre y
-      // cierra la galería mientras navega sería cargoso, así que de la
-      // segunda apertura en adelante vuelve a la cortina simple y rápida,
-      // sin la frase.
+      // mesa, la mirada."). Dos versiones anteriores de esto salieron
+      // mal: la primera la tenía DENTRO de la cortina (el clip-path que
+      // la revelaba también la recortaba al pasarla de largo -- se
+      // armaba y al toque se borraba). La segunda la sacó de la cortina
+      // pero la reveló con un reloj de opacidad propio, sin relación con
+      // dónde estaba el borde -- aparecía mientras la cortina todavía no
+      // se había movido casi nada. Esta versión ata el propio clip-path
+      // de la frase (horizontal, izquierda a derecha) a la POSICIÓN REAL
+      // del borde de la cortina: mientras el borde no llegó a la mitad de
+      // la pantalla (donde vive la frase) no pasa nada, y a medida que el
+      // borde sigue bajando A TRAVÉS de esa franja central, la frase se
+      // va formando -- nunca antes de que la cortina empiece a bajar,
+      // siempre junto con su movimiento. Una vez formada queda así (no
+      // se le vuelve a bajar el clip); solo se apaga con un fundido de
+      // opacidad al final del todo, con la cortina ya prácticamente
+      // afuera. Por esto además es bastante más lenta (3200ms vs. 700ms).
+      // Repetir eso cada vez que alguien abre y cierra la galería
+      // mientras navega sería cargoso, así que de la segunda apertura en
+      // adelante vuelve a la cortina simple y rápida, sin la frase.
     const animarEntrada = () => {
       if (!entrada || this.reduced) return;
       const conFrase = primeraApertura && !!entradaFrase;
@@ -2031,7 +2034,10 @@ const App = {
       entrada.style.clipPath = 'inset(0 0 0 0)';
       entrada.style.opacity = '1';
       if (entradaCostura) entradaCostura.style.opacity = '1';
-      if (entradaFrase) entradaFrase.style.opacity = '0';
+      if (entradaFrase) {
+        entradaFrase.style.opacity = conFrase ? '1' : '0';
+        entradaFrase.style.clipPath = 'inset(0 100% 0 0)';
+      }
       if (!conFrase) {
         const dur = 700;
         const t0 = performance.now();
@@ -2047,26 +2053,24 @@ const App = {
         requestAnimationFrame(paso);
         return;
       }
-      const dur = 2600;
+      // franjas expresadas en % de la posición del borde (0 a 100, no de
+      // tiempo): el borde tiene que cruzar del 36% al 62% -- la franja
+      // central donde vive la frase (top:50% en el CSS) -- para que
+      // termine de formarse, y recién del 90% al 100% se apaga.
+      const dur = 3200;
       const t0 = performance.now();
       const paso = (t) => {
         const p = Math.min(1, (t - t0) / dur);
-        // la cortina baja a velocidad pareja durante toda esta versión
-        // larga -- una cortina real cae más o menos constante, no con la
-        // frenada marcada del ease-out que sí tiene sentido en la versión
-        // corta sin texto.
-        const ease = p * p * (3 - 2 * p);
-        entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
-        if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
-        // la frase se arma, se sostiene y se apaga en su propio reloj de
-        // opacidad -- no tiene nada que ver con en qué altura está el
-        // borde de la cortina en cada momento.
-        let op = 0;
-        if (p < 0.08) op = 0;
-        else if (p < 0.30) op = (p - 0.08) / 0.22;
-        else if (p < 0.78) op = 1;
-        else if (p < 0.95) op = 1 - (p - 0.78) / 0.17;
-        entradaFrase.style.opacity = String(op);
+        // pareja y sin apuro durante toda esta versión larga -- una
+        // cortina real cae más o menos constante, no con la frenada
+        // marcada del ease-out que sí tiene sentido en la versión corta.
+        const borde = p * 100;
+        entrada.style.clipPath = 'inset(' + borde + '% 0 0 0)';
+        if (entradaCostura) entradaCostura.style.top = borde + '%';
+        const formado = Math.max(0, Math.min(1, (borde - 36) / (62 - 36)));
+        entradaFrase.style.clipPath = 'inset(0 ' + ((1 - formado) * 100) + '% 0 0)';
+        const apagado = Math.max(0, Math.min(1, (borde - 90) / (100 - 90)));
+        entradaFrase.style.opacity = String(1 - apagado);
         if (p < 1) { requestAnimationFrame(paso); return; }
         entrada.style.opacity = '0';
         if (entradaCostura) entradaCostura.style.opacity = '0';
