@@ -1274,6 +1274,34 @@ button { font: inherit; }
   opacity: 0;
   pointer-events: none;
 }
+/* la frase vive DENTRO de la cortina, a la altura donde el borde del wipe
+   pasa a mitad de recorrido -- no es un paso aparte antes del wipe, es el
+   propio borde el que la descubre palabra por palabra a medida que se
+   acerca (mismo mecanismo que .hist-quote .word) y el que se la lleva por
+   delante al pasarla de largo, dejando la foto en su lugar. Solo corre en
+   la primera apertura de la sesión -- ver animarEntrada() en galeria(). */
+.galeria-entrada-frase {
+  position: absolute;
+  left: 50%;
+  top: 47%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  width: min(85vw, 640px);
+  text-align: center;
+  font-family: 'Piazzolla', serif;
+  font-style: italic;
+  font-weight: 300;
+  font-size: clamp(1.3rem, 2.6vw + 1svh, 2.3rem);
+  line-height: 1.4;
+  color: var(--crema);
+}
+.galeria-entrada-frase .word {
+  display: inline-block;
+  opacity: 0.14;
+  filter: blur(2px);
+  transition: opacity .42s ease, filter .42s ease;
+}
+.galeria-entrada-frase .word.is-in { opacity: 1; filter: blur(0); }
 .galeria-entrada-costura {
   position: absolute;
   left: 0;

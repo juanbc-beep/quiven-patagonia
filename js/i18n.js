@@ -21,6 +21,7 @@ window.I18N = (function () {
     galeriaTitulo: { es: 'Nuestros Platos', en: 'Our Dishes' },
     galeriaCerrarAria: { es: 'Cerrar galería', en: 'Close gallery' },
     galeriaHint: { es: 'Deslizá o usá las flechas', en: 'Scroll or use the arrow keys' },
+    galeriaFrase: { en: '<span class="word">Before</span> <span class="word">the</span> <span class="word">table,</span> <span class="word">the</span> <span class="word">gaze.</span>' },
     galeriaNombre1: { en: 'Prawn, beetroot and orange' },
     galeriaNombre2: { en: 'Grilled free-range chicken skewer' },
     galeriaNombre3: { en: 'Squash, king crab and black olive' },

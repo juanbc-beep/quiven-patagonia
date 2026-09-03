@@ -1821,6 +1821,8 @@ const App = {
     const costura = q('[data-role="galeria-costura"]');
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
+    const entradaFrase = entrada ? entrada.querySelector('.galeria-entrada-frase') : null;
+    let primeraApertura = true;
     const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
     const items = all('[data-role="galeria-item"]');
@@ -1997,19 +1999,53 @@ const App = {
       // moverse adentro quedan como el mismo gesto, no dos lenguajes
       // distintos. El cierre sigue siendo instantáneo a propósito -- salir
       // no necesita el mismo teatro que entrar.
+      //
+      // La primera apertura de la sesión suma la frase ("Antes de la
+      // mesa, la mirada.") a mitad de la cortina: NO es un paso aparte
+      // antes del wipe, se revela palabra por palabra (mismo mecanismo
+      // que .hist-quote .word) a medida que el propio borde del wipe se
+      // acerca, y ese mismo borde se la lleva por delante al pasarla de
+      // largo, dejando la foto en su lugar -- una sola cortina de bajada,
+      // el aviso y la foto son un solo gesto, no dos. Por eso esta versión
+      // es más lenta (1700ms vs. 700ms). Repetir esos ~1.7s cada vez que
+      // alguien abre y cierra la galería mientras navega sería cargoso,
+      // así que de la segunda apertura en adelante vuelve a la cortina
+      // simple y rápida, sin la frase.
     const animarEntrada = () => {
       if (!entrada || this.reduced) return;
+      // se consultan las palabras de nuevo en cada apertura, no una sola vez
+      // al construir galeria(): cambiarIdioma() reescribe el innerHTML
+      // completo de [data-i18n="galeriaFrase"] (ES/EN no tienen ni la misma
+      // cantidad de palabras), así que una lista cacheada de antemano
+      // quedaría apuntando a nodos viejos ya fuera del DOM.
+      const entradaPalabras = entradaFrase ? Array.from(entradaFrase.querySelectorAll('.word')) : [];
+      const conFrase = primeraApertura && entradaFrase && entradaPalabras.length;
+      primeraApertura = false;
+      if (entradaFrase) entradaFrase.style.display = conFrase ? 'block' : 'none';
+      entradaPalabras.forEach(w => w.classList.remove('is-in'));
       entrada.style.transition = 'none';
       entrada.style.clipPath = 'inset(0 0 0 0)';
       entrada.style.opacity = '1';
       if (entradaCostura) entradaCostura.style.opacity = '1';
-      const dur = 700;
+      const dur = conFrase ? 1700 : 700;
       const t0 = performance.now();
       const paso = (t) => {
         const p = Math.min(1, (t - t0) / dur);
-        const ease = 1 - Math.pow(1 - p, 3);
+        // la versión con frase usa una curva más pareja -- una cortina real
+        // baja a velocidad más constante, no con la frenada marcada del
+        // ease-out que sí tiene sentido en la versión corta sin texto.
+        const ease = conFrase ? p * p * (3 - 2 * p) : 1 - Math.pow(1 - p, 3);
         entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
         if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
+        if (conFrase) {
+          // las palabras terminan de revelarse bastante antes de que el
+          // borde llegue a su altura real (47%, ver CSS) -- si no, se ven
+          // apenas un instante antes de que el mismo borde se las lleve.
+          const nP = entradaPalabras.length;
+          entradaPalabras.forEach((w, i) => {
+            if (p >= (i / nP) * 0.17 + 0.03) w.classList.add('is-in');
+          });
+        }
         if (p < 1) { requestAnimationFrame(paso); return; }
         entrada.style.opacity = '0';
         if (entradaCostura) entradaCostura.style.opacity = '0';
