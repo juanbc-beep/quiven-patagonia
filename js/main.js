@@ -841,14 +841,26 @@ const App = {
     if (pe.arriba) pe.arriba.classList.toggle('is-visible', y > window.innerHeight);
 
     if (this.caps && this.caps.length) {
-      // el offsetTop de cada sección se cachea -- leerlo de las 8 secciones
-      // en cada scroll tick fuerza layout aunque ninguna cambió de alto
-      // desde el último frame. Se invalida en resize, cambio de idioma
-      // (el texto ES/EN no mide igual) y en "load" (por si algo termina de
-      // acomodar el layout después de la carga inicial).
-      if (!this._capsTops) this._capsTops = this.caps.map(s => s.offsetTop);
-      let idx = 0;
-      this._capsTops.forEach((top, n) => { if (y >= top - window.innerHeight * 0.15) idx = n; });
+      // el offsetTop/offsetHeight de cada sección se cachea -- leerlo de las
+      // 9 secciones en cada scroll tick fuerza layout aunque ninguna cambió
+      // de alto desde el último frame. Se invalida en resize, cambio de
+      // idioma (el texto ES/EN no mide igual) y en "load" (por si algo
+      // termina de acomodar el layout después de la carga inicial).
+      if (!this._capsTops) {
+        this._capsTops = this.caps.map(s => s.offsetTop);
+        this._capsBottoms = this.caps.map((s, n) => this._capsTops[n] + s.offsetHeight);
+      }
+      // activa la sección que más pantalla ocupa ahora mismo, no la que ya
+      // cruzó un umbral fijo desde arriba: con un umbral fijo, una sección
+      // final más baja que el viewport (Eventos, Experiencia) podía quedar
+      // fuera de alcance -- no había scroll suficiente para empujar su tope
+      // más allá del umbral, y el indicador se congelaba en la anterior aun
+      // con la sección entera ya a la vista.
+      let idx = 0, mejorSolapa = -1;
+      this._capsTops.forEach((top, n) => {
+        const solapa = Math.min(this._capsBottoms[n], y + window.innerHeight) - Math.max(top, y);
+        if (solapa > mejorSolapa) { mejorSolapa = solapa; idx = n; }
+      });
       if (idx !== this.capActual) {
         this.capActual = idx;
         this.mostrarCap(this.caps[idx]);
