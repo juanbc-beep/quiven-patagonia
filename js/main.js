@@ -1819,6 +1819,8 @@ const App = {
     const fondo = q('[data-role="galeria-fondo"]');
     const contador = q('[data-role="galeria-contador"]');
     const costura = q('[data-role="galeria-costura"]');
+    const entrada = q('[data-role="galeria-entrada"]');
+    const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
     const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
     const items = all('[data-role="galeria-item"]');
@@ -1986,6 +1988,34 @@ const App = {
     };
     const onScroll = () => { if (!raf) raf = requestAnimationFrame(pintarGaleria); };
 
+      // entrada de la galería: no un fundido de opacidad -- es uno de los
+      // puntos fuertes del sitio, se merece su propia entrada. Reutiliza
+      // el MISMO lenguaje visual que ya tiene el wipe entre fotos adentro
+      // (costura dorada + rombo viajando por el borde), a escala de
+      // pantalla completa: una cortina opaca que se abre de arriba hacia
+      // abajo con la costura recorriendo el borde del corte. Entrar y
+      // moverse adentro quedan como el mismo gesto, no dos lenguajes
+      // distintos. El cierre sigue siendo instantáneo a propósito -- salir
+      // no necesita el mismo teatro que entrar.
+    const animarEntrada = () => {
+      if (!entrada || this.reduced) return;
+      entrada.style.transition = 'none';
+      entrada.style.clipPath = 'inset(0 0 0 0)';
+      entrada.style.opacity = '1';
+      if (entradaCostura) entradaCostura.style.opacity = '1';
+      const dur = 700;
+      const t0 = performance.now();
+      const paso = (t) => {
+        const p = Math.min(1, (t - t0) / dur);
+        const ease = 1 - Math.pow(1 - p, 3);
+        entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
+        if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
+        if (p < 1) { requestAnimationFrame(paso); return; }
+        entrada.style.opacity = '0';
+        if (entradaCostura) entradaCostura.style.opacity = '0';
+      };
+      requestAnimationFrame(paso);
+    };
     const abrir = () => {
       if (abierta) return;
       abierta = true;
@@ -1994,6 +2024,7 @@ const App = {
       overlay.setAttribute('aria-hidden', 'false');
       this.bloquear(true);
       scroller.scrollTop = 0;
+      animarEntrada();
       // "loading=lazy" no sirve acá: las 14 fotos están apiladas en el mismo
       // punto dentro de una capa que arranca display:none, así que el navegador
       // nunca las considera "cerca" del viewport hasta scrollear mucho -- sin

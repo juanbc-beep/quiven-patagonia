@@ -674,33 +674,6 @@ button { font: inherit; }
   user-select: none;
 }
 
-/* folio de lectura: cada capítulo lleva su número de página como en un
-   libro impreso -- "02 / 09", en el margen inferior, eco chico de la
-   cifra fantasma grande de la esquina opuesta. */
-.qv-folio {
-  position: absolute;
-  left: 50%;
-  bottom: 2.5%;
-  transform: translateX(-50%);
-  font-family: 'IBM Plex Mono', ui-monospace, monospace;
-  font-feature-settings: 'tnum' 1;
-  font-variant-numeric: tabular-nums;
-  font-size: 0.72rem;
-  letter-spacing: 0.14em;
-  color: rgb(var(--dorado-rgb) / 0.32);
-  pointer-events: none;
-  user-select: none;
-}
-/* en mobile el layout apila todo a lo alto y el folio queda pegado al
-   último bloque de cada sección (chips, botones, el propio widget de
-   Territorio) sin aire de lectura -- y es redundante ahí: la barra fija
-   de arriba (data-role="movil") ya muestra "01 · Descenso" con foto y
-   progreso propios, así que no hace falta repetir el número de capítulo
-   al pie también. */
-@media (max-width: 900px) {
-  .qv-folio { display: none; }
-}
-
 /* justificación editorial: los párrafos largos de relato (no las citas ni
    los títulos) se justifican con guiones silábicos, como el cuerpo de un
    libro impreso -- textura de página, no de sitio web. */
@@ -1286,6 +1259,42 @@ button { font: inherit; }
 }
 @media (prefers-reduced-motion: reduce) {
   .galeria-costura { transition: none; }
+}
+/* cortina de entrada: la apertura de la galería usa el mismo lenguaje que
+   el wipe entre fotos de adentro (costura dorada + rombo), a pantalla
+   completa -- entrar y moverse dentro de la galería quedan como el mismo
+   gesto en vez de dos animaciones sin relación. El JS anima clip-path
+   (inset desde arriba) y el top de la costura juntos, ver animarEntrada()
+   en galeria(). Con reduced-motion no se activa: la galería abre directo. */
+.galeria-entrada {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  background: var(--negro-1);
+  opacity: 0;
+  pointer-events: none;
+}
+.galeria-entrada-costura {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  margin-top: -1px;
+  background: linear-gradient(90deg, transparent, rgb(var(--dorado-rgb) / 0.95) 12%, rgba(242, 200, 140, 1) 50%, rgb(var(--dorado-rgb) / 0.95) 88%, transparent);
+  box-shadow: 0 0 14px rgb(var(--dorado-rgb) / 0.7), 0 0 30px rgb(var(--dorado-oscuro-rgb) / 0.35);
+  opacity: 0;
+}
+.galeria-entrada-costura::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: clamp(13px, 1.8vw, 15px);
+  height: clamp(13px, 1.8vw, 15px);
+  background: var(--dorado);
+  box-shadow: 0 0 13px 3px rgb(var(--dorado-rgb) / 0.8);
+  transform: translate(-50%, -50%) rotate(45deg);
 }
 .galeria-hint {
   position: fixed;
