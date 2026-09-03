@@ -1839,6 +1839,7 @@ const App = {
     const fondo = q('[data-role="galeria-fondo"]');
     const contador = q('[data-role="galeria-contador"]');
     const costura = q('[data-role="galeria-costura"]');
+    const selloFijo = q('[data-role="galeria-sello-fijo"]');
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
     const entradaCifra = q('[data-role="galeria-entrada-cifra"]');
@@ -1890,9 +1891,32 @@ const App = {
     // la foto y el texto de CADA plato (que varía según cuánto texto tenga)
     // y se reparte el sobrante a mano entre el padding de arriba y de abajo
     // -- no depende de que el navegador resuelva bien esa combinación.
+    // el sello fijo (ver la nota junto a .galeria-sello-fijo en el CSS) es
+    // UN SOLO elemento compartido por las 14 fotos, posicionado con la
+    // misma matemática de layout que .galeria-item pero por su cuenta --
+    // no mide nada, confía en que el padding de los dos coincida siempre.
+    // Con el padding ahora distinto por plato (ver centrarMobile()), hay
+    // que empujarle a mano el padding del plato activo en cada cambio.
+    // declarado acá (antes de lo que solía ser su primer uso) porque
+    // centrarMobile()/aplicarSelloFijo() ya lo necesitan en su primer
+    // llamado, más abajo, antes de que abrir/pintarGaleria existan siquiera.
+    let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
+    let paddingsMobile = null;
+    const aplicarSelloFijo = i => {
+      if (!selloFijo) return;
+      const p = paddingsMobile && paddingsMobile[i];
+      selloFijo.style.paddingTop = p ? p.top + 'px' : '';
+      selloFijo.style.paddingBottom = p ? p.bottom + 'px' : '';
+    };
     const centrarMobile = () => {
-      if (!this.chico) { items.forEach(it => { it.style.paddingTop = ''; it.style.paddingBottom = ''; }); return; }
+      if (!this.chico) {
+        items.forEach(it => { it.style.paddingTop = ''; it.style.paddingBottom = ''; });
+        paddingsMobile = null;
+        aplicarSelloFijo(0);
+        return;
+      }
       const gapPx = parseFloat(getComputedStyle(items[0]).rowGap) || 18;
+      paddingsMobile = [];
       items.forEach((it, i) => {
         const foto = fotos[i], info = nombres[i];
         if (!foto || !info) return;
@@ -1904,9 +1928,12 @@ const App = {
         const disponible = it.clientHeight - baseTop - baseBottom;
         const contenido = foto.offsetHeight + gapPx + info.offsetHeight;
         const libre = Math.max(0, disponible - contenido);
-        it.style.paddingTop = (baseTop + libre / 2) + 'px';
-        it.style.paddingBottom = (baseBottom + libre / 2) + 'px';
+        const top = baseTop + libre / 2, bottom = baseBottom + libre / 2;
+        it.style.paddingTop = top + 'px';
+        it.style.paddingBottom = bottom + 'px';
+        paddingsMobile[i] = { top: top, bottom: bottom };
       });
+      aplicarSelloFijo(idxActual >= 0 ? idxActual : 0);
     };
     pintarNumeros();
     // corre DESPUÉS de pintarNumeros(): "PLATO 01 · DE 14" es parte del
@@ -1920,7 +1947,6 @@ const App = {
       tCentrarGaleria = setTimeout(centrarMobile, 160);
     });
     this.refrescarGaleria = () => { pintarNumeros(); centrarMobile(); };
-    let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
       const hex = (it.dataset.color || '#0d0b0a').replace('#', '');
@@ -2043,6 +2069,13 @@ const App = {
       }
       if (idx !== idxActual) {
         idxActual = idx;
+        // en mobile cada plato puede tener un padding-top/bottom distinto
+        // (centrarMobile() lo ajusta según cuánto texto tenga ESE plato) --
+        // el sello fijo, que comparte la misma matemática de layout pero en
+        // un elemento aparte (ver la nota de arriba, junto a .galeria-sello-fijo
+        // en el CSS), tiene que seguir ese mismo padding o queda desalineado
+        // de la foto real apenas cambia el plato activo.
+        aplicarSelloFijo(idx);
         if (contador) contador.textContent = String(idx + 1).padStart(2, '0') + ' / ' + String(n).padStart(2, '0');
         // el bloque de texto ya se desvanece con el wipe (arriba); esto suma
         // un gesto extra solo cuando el plato queda asentado como el actual:
