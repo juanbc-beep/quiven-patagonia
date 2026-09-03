@@ -619,6 +619,11 @@ button { font: inherit; }
   font-weight: 400;
   font-size: 1.9em;
   color: var(--dorado);
+  /* el line-height sin unidad del párrafo (1.8) se recalcula acá con el
+     tamaño de fuente de LA VERSAL (1.9em), no el del texto -- sale un
+     renglón mucho más alto que los demás y separa la línea 1 del resto.
+     Se fija en el mismo valor efectivo que ya usa cada renglón normal. */
+  line-height: 0.95;
 }
 /* comilla decorativa: la cita misma es la textura -- un «» propio, mucho más
    grande y muy tenue, detrás del texto en vez de sumar otra imagen. Repite
@@ -685,6 +690,15 @@ button { font: inherit; }
   color: rgb(var(--dorado-rgb) / 0.32);
   pointer-events: none;
   user-select: none;
+}
+/* en mobile el layout apila todo a lo alto y el folio queda pegado al
+   último bloque de cada sección (chips, botones, el propio widget de
+   Territorio) sin aire de lectura -- y es redundante ahí: la barra fija
+   de arriba (data-role="movil") ya muestra "01 · Descenso" con foto y
+   progreso propios, así que no hace falta repetir el número de capítulo
+   al pie también. */
+@media (max-width: 900px) {
+  .qv-folio { display: none; }
 }
 
 /* justificación editorial: los párrafos largos de relato (no las citas ni
