@@ -1940,6 +1940,29 @@ const App = {
         paddingsMobile[i] = { top: top, bottom: bottom };
       });
       aplicarSelloFijo(idxActual >= 0 ? idxActual : 0);
+      // TEMPORAL: panel de diagnóstico visible con ?debug=1 en la URL --
+      // para ver en un celular real qué está midiendo/calculando esto
+      // sin necesitar devtools. Se saca en cuanto esté diagnosticado.
+      if (/[?&]debug=1/.test(location.search)) {
+        let panel = document.getElementById('qv-debug-galeria');
+        if (!panel) {
+          panel = document.createElement('div');
+          panel.id = 'qv-debug-galeria';
+          panel.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:9999;background:#000;color:#0f0;font:10px monospace;padding:8px;max-width:96vw;white-space:pre-wrap;line-height:1.4;pointer-events:none';
+          document.body.appendChild(panel);
+        }
+        const it0 = items[0], foto0 = fotos[0], info0 = nombres[0];
+        const cs0 = it0 ? getComputedStyle(it0) : null;
+        panel.textContent =
+          'innerWidth=' + window.innerWidth + ' innerHeight=' + window.innerHeight + '\n' +
+          'this.chico=' + this.chico + ' ancho(App)=' + this.ancho + '\n' +
+          'item0.clientHeight=' + (it0 ? it0.clientHeight : 'n/a') + '\n' +
+          'item0 paddingTop=' + (cs0 ? cs0.paddingTop : 'n/a') + ' paddingBottom=' + (cs0 ? cs0.paddingBottom : 'n/a') + '\n' +
+          'foto0.offsetHeight=' + (foto0 ? foto0.offsetHeight : 'n/a') + ' offsetWidth=' + (foto0 ? foto0.offsetWidth : 'n/a') + '\n' +
+          'info0.offsetHeight=' + (info0 ? info0.offsetHeight : 'n/a') + '\n' +
+          'overlay display=' + getComputedStyle(overlay).display + '\n' +
+          'UA=' + navigator.userAgent;
+      }
     };
     pintarNumeros();
     // corre DESPUÉS de pintarNumeros(): "PLATO 01 · DE 14" es parte del
