@@ -1822,8 +1822,13 @@ const App = {
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
     const entradaFrase = q('[data-role="galeria-entrada-frase"]');
+    // la cortina y la frase ya no viven adentro del overlay (display:none
+    // hasta abrir la galería) -- son elementos aparte, siempre con layout
+    // real desde que carga la página, así que las comillas se pueden
+    // posicionar una sola vez acá con seguridad (getClientRects() ya no
+    // devuelve vacío como cuando esto estaba anidado adentro del overlay).
+    if (entradaFrase) this.posicionarComillas(entradaFrase);
     let primeraApertura = true;
-    let entradaFraseLista = false;
     const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
     const items = all('[data-role="galeria-item"]');
@@ -1994,110 +1999,29 @@ const App = {
       // entrada de la galería: no un fundido de opacidad -- es uno de los
       // puntos fuertes del sitio, se merece su propia entrada. Reutiliza
       // el MISMO lenguaje visual que ya tiene el wipe entre fotos adentro
-      // (costura dorada + rombo viajando por el borde), a escala de
-      // pantalla completa: una cortina opaca que se abre de arriba hacia
-      // abajo con la costura recorriendo el borde del corte. Entrar y
-      // moverse adentro quedan como el mismo gesto, no dos lenguajes
-      // distintos. El cierre sigue siendo instantáneo a propósito -- salir
-      // no necesita el mismo teatro que entrar.
-      //
-      // La primera apertura de la sesión suma la frase ("Antes de la
-      // mesa, la mirada."). Tres versiones anteriores de esto salieron
-      // mal: la 1ra la tenía DENTRO de la cortina (se armaba y el propio
-      // clip-path que la revelaba la recortaba al toque). La 2da la sacó
-      // de la cortina pero la reveló con un reloj de opacidad propio, sin
-      // relación con el borde -- aparecía con la cortina casi quieta
-      // todavía. La 3ra la ató a la posición del borde pero la dejó FIJA
-      // a mitad de pantalla, esperando a que el borde la cruzara una sola
-      // vez -- no viajaba con la cortina, solo se formaba en el punto
-      // donde el borde la encontraba de pasada. Esta versión la pega
-      // literalmente al borde: su "top" se pisa cada frame con el mismo
-      // valor que ya usa la costura (unos puntos más abajo, para quedar
-      // adentro de la franja todavía negra, no encima de la línea), así
-      // que baja CON la cortina, no la espera fija. Se va formando
-      // (clip-path horizontal) recién al principio de ese viaje y sigue
-      // bajando ya formada el resto del recorrido, hasta desaparecer
-      // junto con la cortina al final -- no antes de que la cortina
-      // empiece a moverse, nunca "cortada" a mitad de camino. Por esto es
-      // bastante más lenta que la cortina simple (3200ms vs. 700ms).
-      // Repetir eso cada vez que alguien abre y cierra la galería
-      // mientras navega sería cargoso, así que de la segunda apertura en
-      // adelante vuelve a la cortina simple y rápida, sin la frase.
-    const animarEntrada = () => {
-      if (!entrada || this.reduced) return;
-      // las comillas grandes y tenues son el mismo elemento decorativo que
-      // ya usan las citas de Historia/Eventos/Voces -- se posicionan la
-      // primera vez que la galería realmente está visible, nunca antes:
-      // ".galeria-overlay" arranca en display:none y solo pasa a block
-      // recién al abrir(), así que llamar a esto en la construcción de
-      // galeria() (con la página recién cargada, la galería todavía
-      // cerrada) medía sobre un árbol sin layout -- getClientRects()
-      // devolvía vacío, posicionarComillas() cortaba temprano sin tocar
-      // left/top, y las dos marcas quedaban las dos en el mismo punto por
-      // defecto (0,0 del propio párrafo): el "dos comillas gigantes
-      // apiladas" que se veía.
-      if (entradaFrase && !entradaFraseLista) {
-        this.posicionarComillas(entradaFrase);
-        entradaFraseLista = true;
-      }
-      const conFrase = primeraApertura && !!entradaFrase;
-      primeraApertura = false;
-      entrada.style.transition = 'none';
-      entrada.style.clipPath = 'inset(0 0 0 0)';
-      entrada.style.opacity = '1';
-      if (entradaCostura) entradaCostura.style.opacity = '1';
-      if (entradaFrase) {
-        entradaFrase.style.opacity = conFrase ? '1' : '0';
-        entradaFrase.style.clipPath = 'inset(0 100% 0 0)';
-        entradaFrase.style.top = '0%';
-      }
-      if (!conFrase) {
-        const dur = 700;
-        const t0 = performance.now();
-        const paso = (t) => {
-          const p = Math.min(1, (t - t0) / dur);
-          const ease = 1 - Math.pow(1 - p, 3);
-          entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
-          if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
-          if (p < 1) { requestAnimationFrame(paso); return; }
-          entrada.style.opacity = '0';
-          if (entradaCostura) entradaCostura.style.opacity = '0';
-        };
-        requestAnimationFrame(paso);
-        return;
-      }
-      // la frase termina de formarse durante el primer cuarto del
-      // recorrido del borde (0% a 25%) -- después viaja ya formada,
-      // pegada a la cortina, el resto del camino.
-      const dur = 3200;
-      const t0 = performance.now();
-      const paso = (t) => {
-        const p = Math.min(1, (t - t0) / dur);
-        // pareja y sin apuro durante toda esta versión larga -- una
-        // cortina real cae más o menos constante, no con la frenada
-        // marcada del ease-out que sí tiene sentido en la versión corta.
-        const borde = p * 100;
-        entrada.style.clipPath = 'inset(' + borde + '% 0 0 0)';
-        if (entradaCostura) entradaCostura.style.top = borde + '%';
-        entradaFrase.style.top = (borde + 7) + '%';
-        const formado = Math.max(0, Math.min(1, borde / 25));
-        entradaFrase.style.clipPath = 'inset(0 ' + ((1 - formado) * 100) + '% 0 0)';
-        if (p < 1) { requestAnimationFrame(paso); return; }
-        entrada.style.opacity = '0';
-        if (entradaCostura) entradaCostura.style.opacity = '0';
-        entradaFrase.style.opacity = '0';
-      };
-      requestAnimationFrame(paso);
-    };
-    const abrir = () => {
-      if (abierta) return;
-      abierta = true;
-      ultimoFoco = document.activeElement;
+      // (costura dorada + rombo viajando por el borde). Cuatro versiones
+      // anteriores de esto salieron mal, cada una por una razón distinta
+      // (ver historial), pero la última seguía teniendo un problema de
+      // fondo: la cortina vivía DENTRO del overlay de la galería, así que
+      // lo que "se iba comiendo" al bajar era la PROPIA galería (ya
+      // armada, con la foto 1 de fondo) -- no la página de Quiven en la
+      // que el visitante estaba parado. Ahora la cortina es un elemento
+      // aparte (ver el HTML), fixed y con más z-index que todo: arranca
+      // en blanco/transparente (clip-path 0%) tapando nada, CRECE desde
+      // arriba cubriendo cada vez más de lo que sea que esté en pantalla
+      // -- la sección real de Quiven -- y solo cuando llega al 100% (todo
+      // negro) se arma el overlay de la galería DETRÁS de esa cortina
+      // (revelarGaleria) y recién ahí la cortina se retira, mostrando la
+      // primera foto. La frase vive DENTRO de la franja negra que va
+      // creciendo (su posición vertical es siempre la mitad de esa
+      // franja), nunca pegada al borde ni afuera de él, así que se
+      // forma sobre negro sólido, nunca sobre la página que todavía
+      // asoma alrededor.
+    const revelarGaleria = () => {
       overlay.classList.add('is-open');
       overlay.setAttribute('aria-hidden', 'false');
       this.bloquear(true);
       scroller.scrollTop = 0;
-      animarEntrada();
       // "loading=lazy" no sirve acá: las 14 fotos están apiladas en el mismo
       // punto dentro de una capa que arranca display:none, así que el navegador
       // nunca las considera "cerca" del viewport hasta scrollear mucho -- sin
@@ -2107,6 +2031,72 @@ const App = {
       pintarGaleria();
       if (btnCerrar) btnCerrar.focus();
     };
+    const animarEntrada = () => {
+      if (!entrada || this.reduced) { revelarGaleria(); return; }
+      const conFrase = primeraApertura && !!entradaFrase;
+      primeraApertura = false;
+      entrada.style.transition = 'none';
+      entrada.style.opacity = '1';
+      entrada.style.clipPath = 'inset(0 0 100% 0)';
+      if (entradaCostura) { entradaCostura.style.opacity = '1'; entradaCostura.style.top = '0%'; }
+      if (entradaFrase) {
+        entradaFrase.style.opacity = conFrase ? '1' : '0';
+        entradaFrase.style.clipPath = 'inset(0 100% 0 0)';
+        entradaFrase.style.top = '0%';
+      }
+      // fase A: la cortina crece de 0% a 100% (cubre la página actual por
+      // completo). Con frase, bien lenta para que dé tiempo a leerla
+      // (3000ms); sin frase, un cover rápido (450ms). Fase B: una vez
+      // 100% negro, se arma la galería detrás y la cortina (+ frase, si
+      // la hay) se retiran con un fundido -- ahí "aparecen las imágenes".
+      const durA = conFrase ? 3000 : 450;
+      const holdMs = conFrase ? 300 : 60;
+      const durB = conFrase ? 550 : 280;
+      const t0 = performance.now();
+      const pasoA = (t) => {
+        if (!abierta) return; // se cerró en el medio de la animación
+        const p = Math.min(1, (t - t0) / durA);
+        const borde = p * 100;
+        entrada.style.clipPath = 'inset(0 0 ' + (100 - borde) + '% 0)';
+        if (entradaCostura) entradaCostura.style.top = borde + '%';
+        if (conFrase) {
+          entradaFrase.style.top = (borde / 2) + '%';
+          // la frase termina de formarse bien temprano en el recorrido
+          // (borde 15% a 45%) -- para entonces ya hay franja negra de
+          // sobra para contenerla, y le queda todo el resto del camino
+          // para leerse tranquila antes de que aparezca la galería.
+          const formado = Math.max(0, Math.min(1, (borde - 15) / 30));
+          entradaFrase.style.clipPath = 'inset(0 ' + ((1 - formado) * 100) + '% 0 0)';
+        }
+        if (p < 1) { requestAnimationFrame(pasoA); return; }
+        setTimeout(faseB, holdMs);
+      };
+      const faseB = () => {
+        if (!abierta) return;
+        revelarGaleria();
+        const t1 = performance.now();
+        const pasoB = (t) => {
+          if (!abierta) return;
+          const p = Math.min(1, (t - t1) / durB);
+          const op = String(1 - p);
+          entrada.style.opacity = op;
+          if (entradaCostura) entradaCostura.style.opacity = op;
+          if (entradaFrase) entradaFrase.style.opacity = op;
+          if (p < 1) { requestAnimationFrame(pasoB); return; }
+          entrada.style.opacity = '0';
+          if (entradaCostura) entradaCostura.style.opacity = '0';
+          if (entradaFrase) entradaFrase.style.opacity = '0';
+        };
+        requestAnimationFrame(pasoB);
+      };
+      requestAnimationFrame(pasoA);
+    };
+    const abrir = () => {
+      if (abierta) return;
+      abierta = true;
+      ultimoFoco = document.activeElement;
+      animarEntrada();
+    };
     const cerrar = () => {
       if (!abierta) return;
       abierta = false;
@@ -2114,6 +2104,12 @@ const App = {
       overlay.setAttribute('aria-hidden', 'true');
       this.bloquear(false);
       if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
+      // por si se cerró en medio de la animación de entrada (fase A o B
+      // todavía corriendo): sus propios rAF cortan al ver "abierta" en
+      // false, pero la cortina/frase pueden haber quedado a mitad de
+      // opacidad -- las esconde ya mismo en vez de dejarlas colgadas.
+      if (entrada) entrada.style.opacity = '0';
+      if (entradaFrase) entradaFrase.style.opacity = '0';
     };
 
     const irAIndice = destino => {

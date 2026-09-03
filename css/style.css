@@ -1260,38 +1260,42 @@ button { font: inherit; }
 @media (prefers-reduced-motion: reduce) {
   .galeria-costura { transition: none; }
 }
-/* cortina de entrada: la apertura de la galería usa el mismo lenguaje que
-   el wipe entre fotos de adentro (costura dorada + rombo), a pantalla
-   completa -- entrar y moverse dentro de la galería quedan como el mismo
-   gesto en vez de dos animaciones sin relación. El JS anima clip-path
-   (inset desde arriba) y el top de la costura juntos, ver animarEntrada()
-   en galeria(). Con reduced-motion no se activa: la galería abre directo. */
+/* cortina de entrada: vive AFUERA del overlay de la galería (ver el HTML,
+   es hermana de [data-role="galeria"], no hija) y con z-index más alto,
+   así puede taparle la vista a lo que sea que esté en pantalla -- la
+   página de Quiven en la que estabas, no la propia galería, que todavía
+   ni se armó. Reutiliza el lenguaje del wipe entre fotos de adentro
+   (costura dorada + rombo). El JS hace crecer el clip-path desde arriba
+   (0% al empezar, cubre todo al llegar al 100%) y recién ENTONCES arma
+   el overlay de la galería detrás y retira la cortina -- ver
+   animarEntrada()/revelarGaleria() en galeria(). Con reduced-motion no
+   se activa: la galería abre directo. */
 .galeria-entrada {
-  position: absolute;
+  position: fixed;
   inset: 0;
-  z-index: 20;
+  z-index: 600;
   background: var(--negro-1);
   opacity: 0;
   pointer-events: none;
+  clip-path: inset(0 0 100% 0);
 }
-/* la frase va pegada al propio borde de la cortina -- su "top" lo pisa
-   JS en cada frame con el mismo valor que ya usa la costura (ver
-   animarEntrada() en galeria()), así que viaja hacia abajo junto con el
-   telón, no fija a mitad de pantalla esperando a que el borde la cruce
-   una sola vez. Se va formando (clip-path horizontal) durante el primer
-   tramo del recorrido y después sigue el viaje ya formada, dentro de la
-   franja todavía negra de la cortina, hasta desaparecer junto con ella
-   al final. NO lleva comillas chicas en el texto (solo las grandes y
-   tenues que arma posicionarComillas): con las dos juntas, en una frase
-   corta y grande como esta, se leían como cuatro comillas en vez de dos.
-   Solo corre en la primera apertura de la sesión -- las siguientes
-   vuelven a la cortina simple. */
+/* la frase vive DENTRO de la franja negra que la cortina va formando (no
+   pegada a su borde, ni por fuera de ella) -- por eso su posición vertical
+   la recalcula JS cada frame como la MITAD de lo que la cortina ya cubre,
+   siempre bien adentro del negro, lejos del borde donde asoma la página
+   de atrás. Se va formando (clip-path horizontal) apenas hay franja negra
+   suficiente para contenerla y sigue el viaje ya formada. NO lleva
+   comillas chicas en el texto (solo las grandes y tenues que arma
+   posicionarComillas): con las dos juntas, en una frase corta y grande
+   como esta, se leían como cuatro comillas en vez de dos. Solo corre en
+   la primera apertura de la sesión -- las siguientes vuelven a la
+   cortina simple. */
 .galeria-entrada-frase {
-  position: absolute;
+  position: fixed;
   left: 50%;
   top: 0;
   transform: translate(-50%, -50%);
-  z-index: 21;
+  z-index: 601;
   margin: 0;
   width: min(85vw, 640px);
   text-align: center;
