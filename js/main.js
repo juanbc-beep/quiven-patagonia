@@ -834,8 +834,6 @@ const App = {
     const y = window.scrollY || doc.scrollTop;
     const r = clamp(y / max, 0, 1);
 
-    if (pe.hiloFill) pe.hiloFill.style.height = (r * 100) + '%';
-    if (pe.hiloBrasa) pe.hiloBrasa.style.top = 'calc(' + (r * 100) + '% - 3px)';
     if (pe.movilFill) pe.movilFill.style.width = (r * 100) + '%';
 
     if (pe.arriba) pe.arriba.classList.toggle('is-visible', y > window.innerHeight);
@@ -846,25 +844,44 @@ const App = {
       // de alto desde el último frame. Se invalida en resize, cambio de
       // idioma (el texto ES/EN no mide igual) y en "load" (por si algo
       // termina de acomodar el layout después de la carga inicial).
-      if (!this._capsTops) {
-        this._capsTops = this.caps.map(s => s.offsetTop);
-        this._capsBottoms = this.caps.map((s, n) => this._capsTops[n] + s.offsetHeight);
-      }
-      // activa la sección que más pantalla ocupa ahora mismo, no la que ya
-      // cruzó un umbral fijo desde arriba: con un umbral fijo, una sección
-      // final más baja que el viewport (Eventos, Experiencia) podía quedar
-      // fuera de alcance -- no había scroll suficiente para empujar su tope
-      // más allá del umbral, y el indicador se congelaba en la anterior aun
-      // con la sección entera ya a la vista.
-      let idx = 0, mejorSolapa = -1;
-      this._capsTops.forEach((top, n) => {
-        const solapa = Math.min(this._capsBottoms[n], y + window.innerHeight) - Math.max(top, y);
-        if (solapa > mejorSolapa) { mejorSolapa = solapa; idx = n; }
-      });
+      if (!this._capsTops) this._capsTops = this.caps.map(s => s.offsetTop);
+      // activa la última sección cuyo tope ya se cruzó (con un pequeño
+      // margen de anticipación). No sirve medir "cuánta sección entra en
+      // pantalla": el Descenso es scroll continuo con la foto fijada
+      // (sticky) mientras dura su propio recorrido, así que buena parte de
+      // su alto real en el documento nunca se ve "llena" de contenido
+      // propio -- con esa métrica el indicador saltaba a Territorio a
+      // mitad del Descenso. El único caso que el cruce de umbral no cubre
+      // es una sección final más baja que la pantalla (Eventos,
+      // Experiencia): ahí puede no quedar scroll para llegar a cruzar su
+      // umbral, así que al tocar el fondo real de la página se fuerza la
+      // última sección activa.
+      let idx = 0;
+      this._capsTops.forEach((top, n) => { if (y >= top - window.innerHeight * 0.15) idx = n; });
+      if (y >= max - 1) idx = this.caps.length - 1;
       if (idx !== this.capActual) {
         this.capActual = idx;
         this.mostrarCap(this.caps[idx]);
       }
+
+      // el punto de la barra viaja entre nodos, no según el % de scroll de
+      // toda la página: los nodos están espaciados por índice (uno cada
+      // 1/8 de la barra), pero las secciones NO miden lo mismo -- "El
+      // Descenso" por sí solo puede ocupar un cuarto de la página entera.
+      // Con el % de scroll bruto, el punto llegaba a la mitad de la barra
+      // (sección 2) sin haber terminado de recorrer la sección 1 todavía.
+      // Acá se interpola la posición del punto entre el nodo actual y el
+      // siguiente según cuánto se avanzó dentro de la sección actual.
+      const nCaps = this.caps.length;
+      let railFrac = 1;
+      if (idx < nCaps - 1) {
+        const topA = this._capsTops[idx];
+        const topB = this._capsTops[idx + 1];
+        const p = topB > topA ? clamp((y - topA) / (topB - topA), 0, 1) : 0;
+        railFrac = (idx + p) / (nCaps - 1);
+      }
+      if (pe.hiloFill) pe.hiloFill.style.height = (railFrac * 100) + '%';
+      if (pe.hiloBrasa) pe.hiloBrasa.style.top = 'calc(' + (railFrac * 100) + '% - 3px)';
     }
 
     if (pe.nav) {
