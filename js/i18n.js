@@ -26,7 +26,7 @@ window.I18N = (function () {
     // grandes) al elemento apenas carga la página, antes de que nadie
     // togglee el idioma -- si "es" se tomara recién ahí del innerHTML ya
     // tendría esos hijos adentro, horneados como si fueran el texto fuente.
-    galeriaFrase: { es: '«Antes de la mesa, la mirada.»', en: '«Before the table, the gaze.»' },
+    galeriaFrase: { es: 'Antes de la mesa, la mirada.', en: 'Before the table, the gaze.' },
     galeriaNombre1: { en: 'Prawn, beetroot and orange' },
     galeriaNombre2: { en: 'Grilled free-range chicken skewer' },
     galeriaNombre3: { en: 'Squash, king crab and black olive' },

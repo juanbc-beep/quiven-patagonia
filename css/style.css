@@ -1274,23 +1274,22 @@ button { font: inherit; }
   opacity: 0;
   pointer-events: none;
 }
-/* la frase NO es hija de la cortina -- si lo fuera, el propio clip-path que
-   la revela también la recortaría apenas el borde la pasa de largo (se
-   "borraría" en vez de quedar leída, que es justo lo que no tiene que
-   pasar). Es un elemento aparte, cuyo propio clip-path horizontal (izquierda
-   a derecha) se abre EN FUNCIÓN DE LA POSICIÓN REAL del borde de la
-   cortina, no de un reloj propio -- mientras el borde está arriba de la
-   mitad de la pantalla no pasa nada; recién cuando lo cruza, la frase
-   empieza a formarse, y sigue formándose mientras el borde sigue bajando.
-   Una vez formada queda así (no se le vuelve a bajar el clip), y solo se
-   apaga con un fundido de opacidad al final del todo, ya con la cortina
-   prácticamente afuera -- ver animarEntrada() en galeria(). Solo corre en
-   la primera apertura de la sesión -- las siguientes vuelven a la cortina
-   simple. */
+/* la frase va pegada al propio borde de la cortina -- su "top" lo pisa
+   JS en cada frame con el mismo valor que ya usa la costura (ver
+   animarEntrada() en galeria()), así que viaja hacia abajo junto con el
+   telón, no fija a mitad de pantalla esperando a que el borde la cruce
+   una sola vez. Se va formando (clip-path horizontal) durante el primer
+   tramo del recorrido y después sigue el viaje ya formada, dentro de la
+   franja todavía negra de la cortina, hasta desaparecer junto con ella
+   al final. NO lleva comillas chicas en el texto (solo las grandes y
+   tenues que arma posicionarComillas): con las dos juntas, en una frase
+   corta y grande como esta, se leían como cuatro comillas en vez de dos.
+   Solo corre en la primera apertura de la sesión -- las siguientes
+   vuelven a la cortina simple. */
 .galeria-entrada-frase {
   position: absolute;
   left: 50%;
-  top: 50%;
+  top: 0;
   transform: translate(-50%, -50%);
   z-index: 21;
   margin: 0;
@@ -1306,6 +1305,12 @@ button { font: inherit; }
   opacity: 0;
   pointer-events: none;
   clip-path: inset(0 100% 0 0);
+}
+/* a esta escala (frase corta, sola, grande) el 3em de siempre queda
+   desproporcionado -- se achica solo acá. */
+.galeria-entrada-frase .qv-cita-abre,
+.galeria-entrada-frase .qv-cita-cierre {
+  font-size: 1.7em;
 }
 .galeria-entrada-costura {
   position: absolute;

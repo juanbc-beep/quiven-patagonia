@@ -1822,13 +1822,8 @@ const App = {
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
     const entradaFrase = q('[data-role="galeria-entrada-frase"]');
-    // las comillas grandes y tenues son el mismo elemento decorativo que ya
-    // usan las citas de Historia/Eventos/Voces -- se posicionan una sola vez
-    // acá (el texto es fijo, no cambia con el paso/idioma más que por el
-    // propio cambiarIdioma() global, que ya vuelve a llamar a esta función
-    // para todo .qv-cita cuando corresponde).
-    if (entradaFrase) this.posicionarComillas(entradaFrase);
     let primeraApertura = true;
+    let entradaFraseLista = false;
     const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
     const items = all('[data-role="galeria-item"]');
@@ -2007,27 +2002,44 @@ const App = {
       // no necesita el mismo teatro que entrar.
       //
       // La primera apertura de la sesión suma la frase ("Antes de la
-      // mesa, la mirada."). Dos versiones anteriores de esto salieron
-      // mal: la primera la tenía DENTRO de la cortina (el clip-path que
-      // la revelaba también la recortaba al pasarla de largo -- se
-      // armaba y al toque se borraba). La segunda la sacó de la cortina
-      // pero la reveló con un reloj de opacidad propio, sin relación con
-      // dónde estaba el borde -- aparecía mientras la cortina todavía no
-      // se había movido casi nada. Esta versión ata el propio clip-path
-      // de la frase (horizontal, izquierda a derecha) a la POSICIÓN REAL
-      // del borde de la cortina: mientras el borde no llegó a la mitad de
-      // la pantalla (donde vive la frase) no pasa nada, y a medida que el
-      // borde sigue bajando A TRAVÉS de esa franja central, la frase se
-      // va formando -- nunca antes de que la cortina empiece a bajar,
-      // siempre junto con su movimiento. Una vez formada queda así (no
-      // se le vuelve a bajar el clip); solo se apaga con un fundido de
-      // opacidad al final del todo, con la cortina ya prácticamente
-      // afuera. Por esto además es bastante más lenta (3200ms vs. 700ms).
+      // mesa, la mirada."). Tres versiones anteriores de esto salieron
+      // mal: la 1ra la tenía DENTRO de la cortina (se armaba y el propio
+      // clip-path que la revelaba la recortaba al toque). La 2da la sacó
+      // de la cortina pero la reveló con un reloj de opacidad propio, sin
+      // relación con el borde -- aparecía con la cortina casi quieta
+      // todavía. La 3ra la ató a la posición del borde pero la dejó FIJA
+      // a mitad de pantalla, esperando a que el borde la cruzara una sola
+      // vez -- no viajaba con la cortina, solo se formaba en el punto
+      // donde el borde la encontraba de pasada. Esta versión la pega
+      // literalmente al borde: su "top" se pisa cada frame con el mismo
+      // valor que ya usa la costura (unos puntos más abajo, para quedar
+      // adentro de la franja todavía negra, no encima de la línea), así
+      // que baja CON la cortina, no la espera fija. Se va formando
+      // (clip-path horizontal) recién al principio de ese viaje y sigue
+      // bajando ya formada el resto del recorrido, hasta desaparecer
+      // junto con la cortina al final -- no antes de que la cortina
+      // empiece a moverse, nunca "cortada" a mitad de camino. Por esto es
+      // bastante más lenta que la cortina simple (3200ms vs. 700ms).
       // Repetir eso cada vez que alguien abre y cierra la galería
       // mientras navega sería cargoso, así que de la segunda apertura en
       // adelante vuelve a la cortina simple y rápida, sin la frase.
     const animarEntrada = () => {
       if (!entrada || this.reduced) return;
+      // las comillas grandes y tenues son el mismo elemento decorativo que
+      // ya usan las citas de Historia/Eventos/Voces -- se posicionan la
+      // primera vez que la galería realmente está visible, nunca antes:
+      // ".galeria-overlay" arranca en display:none y solo pasa a block
+      // recién al abrir(), así que llamar a esto en la construcción de
+      // galeria() (con la página recién cargada, la galería todavía
+      // cerrada) medía sobre un árbol sin layout -- getClientRects()
+      // devolvía vacío, posicionarComillas() cortaba temprano sin tocar
+      // left/top, y las dos marcas quedaban las dos en el mismo punto por
+      // defecto (0,0 del propio párrafo): el "dos comillas gigantes
+      // apiladas" que se veía.
+      if (entradaFrase && !entradaFraseLista) {
+        this.posicionarComillas(entradaFrase);
+        entradaFraseLista = true;
+      }
       const conFrase = primeraApertura && !!entradaFrase;
       primeraApertura = false;
       entrada.style.transition = 'none';
@@ -2037,6 +2049,7 @@ const App = {
       if (entradaFrase) {
         entradaFrase.style.opacity = conFrase ? '1' : '0';
         entradaFrase.style.clipPath = 'inset(0 100% 0 0)';
+        entradaFrase.style.top = '0%';
       }
       if (!conFrase) {
         const dur = 700;
@@ -2053,10 +2066,9 @@ const App = {
         requestAnimationFrame(paso);
         return;
       }
-      // franjas expresadas en % de la posición del borde (0 a 100, no de
-      // tiempo): el borde tiene que cruzar del 36% al 62% -- la franja
-      // central donde vive la frase (top:50% en el CSS) -- para que
-      // termine de formarse, y recién del 90% al 100% se apaga.
+      // la frase termina de formarse durante el primer cuarto del
+      // recorrido del borde (0% a 25%) -- después viaja ya formada,
+      // pegada a la cortina, el resto del camino.
       const dur = 3200;
       const t0 = performance.now();
       const paso = (t) => {
@@ -2067,10 +2079,9 @@ const App = {
         const borde = p * 100;
         entrada.style.clipPath = 'inset(' + borde + '% 0 0 0)';
         if (entradaCostura) entradaCostura.style.top = borde + '%';
-        const formado = Math.max(0, Math.min(1, (borde - 36) / (62 - 36)));
+        entradaFrase.style.top = (borde + 7) + '%';
+        const formado = Math.max(0, Math.min(1, borde / 25));
         entradaFrase.style.clipPath = 'inset(0 ' + ((1 - formado) * 100) + '% 0 0)';
-        const apagado = Math.max(0, Math.min(1, (borde - 90) / (100 - 90)));
-        entradaFrase.style.opacity = String(1 - apagado);
         if (p < 1) { requestAnimationFrame(paso); return; }
         entrada.style.opacity = '0';
         if (entradaCostura) entradaCostura.style.opacity = '0';
