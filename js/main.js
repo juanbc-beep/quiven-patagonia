@@ -215,13 +215,18 @@ const App = {
 
     this.grano();
     this.ticks();
-    this.cursor();
     this.hilo();
     this.territorio();
     this.pase();
     this.menu();
     this.historia();
+    // voces() antes que cursor(): arma las .voces-card recién ahí, y
+    // cursor() las engancha con querySelectorAll('.voces-card') al armar
+    // sus listeners -- en el orden anterior corría primero y no encontraba
+    // ninguna tarjeta todavía (no existían), así que quedaban con el
+    // cursor nativo del navegador aunque el CSS diga .voces-card.
     this.voces();
+    this.cursor();
     this.experiencia();
     this.lazyVideo('fuego-video', 'assets/video/quiven-hero-loop.mp4');
     this.portal();
@@ -762,7 +767,14 @@ const App = {
       requestAnimationFrame(loop);
     };
     loop();
-    all('[data-cursor],a,button').forEach(el => {
+    // .voces-card entra acá aparte de [data-cursor]/a/button: no es un link,
+    // así que no lleva etiqueta (ningún "LEER" que prometa un clic que no
+    // hace nada) -- pero sí ya reacciona al hover (se levanta, el borde se
+    // ilumina), y quedaba con el cursor nativo mientras todo lo demás con
+    // reacción al hover en el sitio usa el punto animado. Solo el punto,
+    // sin trocar el vocabulario de etiquetas que en el resto del sitio
+    // siempre corresponde a una acción real.
+    all('[data-cursor],a,button,.voces-card').forEach(el => {
       el.addEventListener('mouseenter', () => {
         const lbl = el.dataset.cursor;
         if (lbl === '') { c.style.opacity = '0'; return; }
@@ -1688,6 +1700,7 @@ const App = {
     if (!a || !b) return;
     const tarjeta = (c, i) => {
       const d = document.createElement('div');
+      d.className = 'voces-card';
       // el inset shadow es el mismo lenguaje "envejecido" que .hist-photo::after
       // en La Historia -- oscurece apenas las esquinas de la tarjeta, para que
       // las citas de comensales se sientan tan de archivo como las fotos del chef
@@ -1775,6 +1788,23 @@ const App = {
 
   experiencia() {
     this.lazyVideo('exp-video', 'assets/video/quiven-platos-loop.mp4');
+    // el cierre del recorrido tiene que sentirse como un cierre, no como
+    // un capítulo más: el fondo entra con un fundido lento y deliberado
+    // (2.4s -- el resto del sitio funde entre .5s y 1s) la primera vez
+    // que la sección aparece, en vez de saltar de golpe a su opacidad
+    // final como hacía hasta ahora. El HTML ya trae opacity:0.22 fijo,
+    // así que con reduced-motion (o sin JS) el video se ve igual que
+    // siempre -- acá solo se pisa ese valor cuando SÍ hay animación.
+    const v = q('[data-role="exp-video"]');
+    if (v && !this.reduced) {
+      v.style.opacity = '0';
+      v.style.transition = 'opacity 2.4s ease';
+      const io = new IntersectionObserver(es => es.forEach(e => {
+        if (e.isIntersecting) { v.style.opacity = '0.22'; io.disconnect(); }
+      }), { threshold: 0.15 });
+      io.observe(v);
+      this.observadores.push(io);
+    }
   },
 
   /* ---------- galería de platos: capa aparte con scroll propio, no toca
