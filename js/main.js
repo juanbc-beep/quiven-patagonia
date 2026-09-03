@@ -2017,24 +2017,63 @@ const App = {
       // franja), nunca pegada al borde ni afuera de él, así que se
       // forma sobre negro sólido, nunca sobre la página que todavía
       // asoma alrededor.
-    const revelarGaleria = () => {
+    // separado en dos pasos a propósito -- ver la nota larga más abajo,
+    // junto a animarEntrada(), sobre por qué armar la galería recién al
+    // final (como parecía obvio) terminaba constándole el doble de fps a
+    // toda la Fase A.
+    const prepararGaleria = () => {
+      // arma la galería entera (layout real, las 14 fotos decodificando)
+      // pero invisible -- overlay queda pintado y compuesto como una capa
+      // más debajo de la cortina desde el arranque mismo, en vez de
+      // aparecer recién al final. aria-hidden sigue en "true": aunque ya
+      // esté en el DOM con layout, todavía no es lo que el visitante ve.
+      overlay.style.opacity = '0';
       overlay.classList.add('is-open');
-      overlay.setAttribute('aria-hidden', 'false');
-      this.bloquear(true);
       scroller.scrollTop = 0;
       // "loading=lazy" no sirve acá: las 14 fotos están apiladas en el mismo
-      // punto dentro de una capa que arranca display:none, así que el navegador
-      // nunca las considera "cerca" del viewport hasta scrollear mucho -- sin
-      // esto, la foto que entra en la cortina todavía no cargó y no se ve nada
-      // hasta que por fin decide bajarla sola. Al abrir, forzamos que bajen ya.
+      // punto dentro de una capa que hasta ahora arrancaba display:none, así
+      // que el navegador nunca las consideraba "cerca" del viewport hasta
+      // scrollear mucho -- sin esto, la foto que entra en la cortina
+      // todavía no cargó y no se ve nada hasta que por fin decide bajarla
+      // sola. Se fuerza que bajen ya, apenas arranca la cortina.
       items.forEach(it => { const img = it.querySelector('img'); if (img) img.loading = 'eager'; });
       pintarGaleria();
+    };
+    const revelarGaleria = () => {
+      // la galería ya está armada y pintada (prepararGaleria, más arriba) --
+      // acá solo falta hacerla visible. Un cambio de opacidad es barato
+      // (el compositor lo resuelve solo, sin volver a medir/pintar nada) y
+      // encima queda oculto por la propia cortina, todavía opaca en este
+      // instante exacto: no hay ningún salto visible en el cambio.
+      overlay.style.opacity = '1';
+      overlay.setAttribute('aria-hidden', 'false');
+      this.bloquear(true);
       if (btnCerrar) btnCerrar.focus();
     };
     const animarEntrada = () => {
-      if (!entrada || this.reduced) { revelarGaleria(); return; }
+      if (!entrada || this.reduced) { prepararGaleria(); revelarGaleria(); return; }
       const conFrase = primeraApertura && !!entradaFrase;
       primeraApertura = false;
+      // arma la galería (invisible) YA, no recién cuando la cortina llega al
+      // 100% -- las 14 fotos arrancan a decodificar con toda la Fase A de
+      // margen (~3s) en vez de los ~500ms que quedaban antes entre
+      // "empieza a bajar la cortina" y "hace falta la foto 1 ya", y se saca
+      // de encima el layout pesado de armar la galería (pintarGaleria(),
+      // catorce imágenes) de encima del momento más delicado de la
+      // animación (el instante de la revelación) para hacerlo temprano,
+      // mientras la cortina recién está empezando a cubrir la pantalla.
+      // OJO: esto NO achica el costo real de la Fase A -- ver medición
+      // abajo -- mantener la página de Quiven visible de verdad debajo de
+      // la cortina (el pedido explícito) sigue siendo más caro para el
+      // navegador que la versión anterior, que tapaba la pantalla con el
+      // fondo ya armado de la galería desde el arranque. Se probó promover
+      // la cortina a su propia capa (will-change), pausar animaciones
+      // ambientales (grano, logo, cursor) durante la entrada, cambiar
+      // clip-path por transform, y content-visibility en las secciones --
+      // ninguno achicó la diferencia medida (~28fps vs ~50fps con la
+      // versión anterior, en las mismas condiciones). Ver conversación con
+      // el usuario sobre el trade-off.
+      prepararGaleria();
       entrada.style.transition = 'none';
       entrada.style.opacity = '1';
       entrada.style.clipPath = 'inset(0 0 100% 0)';
@@ -2102,6 +2141,11 @@ const App = {
       abierta = false;
       overlay.classList.remove('is-open');
       overlay.setAttribute('aria-hidden', 'true');
+      // limpia el opacity inline que deja prepararGaleria() -- si no,
+      // la próxima apertura arrancaría la galería en opacity:0 clavado
+      // hasta que revelarGaleria() la vuelva a pisar, un instante blanco
+      // (bah, negro) de más si algo tarda en llegar a esa línea.
+      overlay.style.opacity = '';
       this.bloquear(false);
       if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
       // por si se cerró en medio de la animación de entrada (fase A o B
