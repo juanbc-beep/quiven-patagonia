@@ -1841,6 +1841,8 @@ const App = {
     const costura = q('[data-role="galeria-costura"]');
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
+    const entradaCifra = q('[data-role="galeria-entrada-cifra"]');
+    const entradaKicker = q('[data-role="galeria-entrada-kicker"]');
     const entradaFrase = q('[data-role="galeria-entrada-frase"]');
     // la cortina y la frase ya no viven adentro del overlay (display:none
     // hasta abrir la galería) -- son elementos aparte, siempre con layout
@@ -1873,6 +1875,12 @@ const App = {
       numEls.forEach((el, i) => {
         if (el) el.textContent = palabra + ' ' + String(i + 1).padStart(2, '0') + ' · ' + de + ' ' + String(n).padStart(2, '0');
       });
+      if (entradaCifra) entradaCifra.textContent = String(n);
+      if (entradaKicker) {
+        const gal = window.I18N ? window.I18N.t('navGaleria') : 'Galería';
+        const platos = window.I18N ? window.I18N.t('galeriaEntradaPlatos') : 'platos';
+        entradaKicker.textContent = gal.toUpperCase() + ' · ' + n + ' ' + platos.toUpperCase();
+      }
     };
     pintarNumeros();
     this.refrescarGaleria = pintarNumeros;
@@ -2103,6 +2111,7 @@ const App = {
         entradaFrase.style.clipPath = 'inset(0 100% 0 0)';
         entradaFrase.style.top = '0%';
       }
+      if (entradaKicker) { entradaKicker.style.opacity = '0'; entradaKicker.style.top = '0%'; }
       // fase A: la cortina crece de 0% a 100% (cubre la página actual por
       // completo). Con frase, todavía lenta para que dé tiempo a leerla
       // pero no tanto como antes (2400ms, era 3000): la Fase A es la parte
@@ -2133,6 +2142,11 @@ const App = {
           // para leerse tranquila antes de que aparezca la galería.
           const formado = Math.max(0, Math.min(1, (borde - 15) / 30));
           entradaFrase.style.clipPath = 'inset(0 ' + ((1 - formado) * 100) + '% 0 0)';
+          // el kicker viaja pegado a la frase (mismo "top") y se revela con
+          // el mismo avance -- un fundido simple, no otro clip-path propio:
+          // dos revelados de izquierda a derecha uno arriba del otro se
+          // hubiera visto como un tartamudeo, no como un mismo gesto.
+          if (entradaKicker) { entradaKicker.style.top = (borde / 2) + '%'; entradaKicker.style.opacity = String(formado); }
         }
         if (p < 1) { requestAnimationFrame(pasoA); return; }
         setTimeout(faseB, holdMs);
@@ -2148,10 +2162,12 @@ const App = {
           entrada.style.opacity = op;
           if (entradaCostura) entradaCostura.style.opacity = op;
           if (entradaFrase) entradaFrase.style.opacity = op;
+          if (entradaKicker) entradaKicker.style.opacity = op;
           if (p < 1) { requestAnimationFrame(pasoB); return; }
           entrada.style.opacity = '0';
           if (entradaCostura) entradaCostura.style.opacity = '0';
           if (entradaFrase) entradaFrase.style.opacity = '0';
+          if (entradaKicker) entradaKicker.style.opacity = '0';
         };
         requestAnimationFrame(pasoB);
       };
@@ -2181,6 +2197,7 @@ const App = {
       // opacidad -- las esconde ya mismo en vez de dejarlas colgadas.
       if (entrada) entrada.style.opacity = '0';
       if (entradaFrase) entradaFrase.style.opacity = '0';
+      if (entradaKicker) entradaKicker.style.opacity = '0';
     };
 
     const irAIndice = destino => {
