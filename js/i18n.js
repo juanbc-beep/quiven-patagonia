@@ -81,7 +81,7 @@ window.I18N = (function () {
     interludioCita: { en: '“Before it’s a dish, all of this was territory.”' },
 
     fuegoKicker: { en: '03 · The Fire' },
-    fuegoTitulo: { en: '<span class="clip-inner">Here, the ingredient stops being an ingredient.</span>' },
+    fuegoTitulo: { en: '<span class="clip-inner">Here, the <span style="font-weight:560">ingredient</span> stops being an <span style="font-weight:120">ingredient</span>.</span>' },
     fuegoTexto: { en: 'A night of service isn’t one thing: it’s four moments, and none of them can be rushed. Pick a time on the clock.' },
 
     platoKicker: { en: '04 · The Tasting Menu' },

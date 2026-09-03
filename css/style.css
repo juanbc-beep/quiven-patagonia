@@ -21,7 +21,13 @@
 @font-face {
   font-family: 'Piazzolla';
   font-style: normal;
-  font-weight: 200 400;
+  /* el archivo es variable de verdad (fvar wght 100-900) -- el rango
+     venía angosto (200 400) porque nada lo había necesitado hasta ahora.
+     El título de Fuego sí: "producto" pesado vs. "producto" livianísimo,
+     el peso mismo actuando la frase ("deja de ser producto"). Se abre
+     el rango declarado para que esos valores interpolen de verdad en vez
+     de recortarse al borde más cercano (200 o 400). */
+  font-weight: 100 700;
   font-display: swap;
   src: url('../assets/fonts/piazzolla-regular.woff2') format('woff2');
 }
