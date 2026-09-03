@@ -1882,8 +1882,44 @@ const App = {
         entradaKicker.textContent = gal.toUpperCase() + ' · ' + n + ' ' + platos.toUpperCase();
       }
     };
+    // en mobile, "justify-content:center" (probado primero, más simple)
+    // dejaba el conjunto foto+texto pegado arriba en algunos navegadores
+    // reales -- el alto de la foto se resuelve vía aspect-ratio + max-height,
+    // y esa combinación con la distribución de espacio de flexbox no es
+    // confiable en todos los motores. Acá se mide el alto real que ocupan
+    // la foto y el texto de CADA plato (que varía según cuánto texto tenga)
+    // y se reparte el sobrante a mano entre el padding de arriba y de abajo
+    // -- no depende de que el navegador resuelva bien esa combinación.
+    const centrarMobile = () => {
+      if (!this.chico) { items.forEach(it => { it.style.paddingTop = ''; it.style.paddingBottom = ''; }); return; }
+      const gapPx = parseFloat(getComputedStyle(items[0]).rowGap) || 18;
+      items.forEach((it, i) => {
+        const foto = fotos[i], info = nombres[i];
+        if (!foto || !info) return;
+        const cs = getComputedStyle(it);
+        const baseTop = parseFloat(cs.paddingTop) || 0;
+        const baseBottom = parseFloat(cs.paddingBottom) || 0;
+        it.style.paddingTop = '';
+        it.style.paddingBottom = '';
+        const disponible = it.clientHeight - baseTop - baseBottom;
+        const contenido = foto.offsetHeight + gapPx + info.offsetHeight;
+        const libre = Math.max(0, disponible - contenido);
+        it.style.paddingTop = (baseTop + libre / 2) + 'px';
+        it.style.paddingBottom = (baseBottom + libre / 2) + 'px';
+      });
+    };
     pintarNumeros();
-    this.refrescarGaleria = pintarNumeros;
+    // corre DESPUÉS de pintarNumeros(): "PLATO 01 · DE 14" es parte del
+    // bloque que se mide (va dentro de .galeria-info) -- medirlo vacío
+    // (antes de tener texto) da un alto de menos, y centra mal.
+    centrarMobile();
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(centrarMobile);
+    let tCentrarGaleria;
+    window.addEventListener('resize', () => {
+      clearTimeout(tCentrarGaleria);
+      tCentrarGaleria = setTimeout(centrarMobile, 160);
+    });
+    this.refrescarGaleria = () => { pintarNumeros(); centrarMobile(); };
     let abierta = false, ultimoFoco = null, idxActual = -1, raf = null;
     // colores de fondo pre-parseados una sola vez, no en cada frame
     const colores = items.map(it => {
