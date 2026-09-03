@@ -1274,17 +1274,21 @@ button { font: inherit; }
   opacity: 0;
   pointer-events: none;
 }
-/* la frase vive DENTRO de la cortina, a la altura donde el borde del wipe
-   pasa a mitad de recorrido -- no es un paso aparte antes del wipe, es el
-   propio borde el que la descubre palabra por palabra a medida que se
-   acerca (mismo mecanismo que .hist-quote .word) y el que se la lleva por
-   delante al pasarla de largo, dejando la foto en su lugar. Solo corre en
-   la primera apertura de la sesión -- ver animarEntrada() en galeria(). */
+/* la frase NO es hija de la cortina -- si lo fuera, el propio clip-path que
+   la revela también la recortaría apenas el borde la pasa de largo (se
+   "borraría" en vez de quedar leída, que es justo lo que no tiene que
+   pasar). Es un elemento aparte, con su propio fundido de opacidad, que
+   se arma MIENTRAS la cortina sigue bajando (mismo reloj, ver
+   animarEntrada() en galeria()), no antes ni después. El fondo radial
+   propio (::before) la mantiene legible sin importar si detrás todavía
+   está la cortina o ya la foto. Solo corre en la primera apertura de la
+   sesión -- las siguientes vuelven a la cortina simple. */
 .galeria-entrada-frase {
   position: absolute;
   left: 50%;
-  top: 47%;
+  top: 50%;
   transform: translate(-50%, -50%);
+  z-index: 21;
   margin: 0;
   width: min(85vw, 640px);
   text-align: center;
@@ -1293,15 +1297,17 @@ button { font: inherit; }
   font-weight: 300;
   font-size: clamp(1.3rem, 2.6vw + 1svh, 2.3rem);
   line-height: 1.4;
-  color: var(--crema);
+  color: var(--dorado);
+  opacity: 0;
+  pointer-events: none;
 }
-.galeria-entrada-frase .word {
-  display: inline-block;
-  opacity: 0.14;
-  filter: blur(2px);
-  transition: opacity .42s ease, filter .42s ease;
+.galeria-entrada-frase::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: -20% -18%;
+  background: radial-gradient(ellipse at center, rgb(var(--negro-1-rgb) / 0.92) 0%, rgb(var(--negro-1-rgb) / 0.7) 55%, transparent 100%);
 }
-.galeria-entrada-frase .word.is-in { opacity: 1; filter: blur(0); }
 .galeria-entrada-costura {
   position: absolute;
   left: 0;

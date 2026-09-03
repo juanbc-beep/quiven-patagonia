@@ -1821,7 +1821,13 @@ const App = {
     const costura = q('[data-role="galeria-costura"]');
     const entrada = q('[data-role="galeria-entrada"]');
     const entradaCostura = entrada ? entrada.querySelector('.galeria-entrada-costura') : null;
-    const entradaFrase = entrada ? entrada.querySelector('.galeria-entrada-frase') : null;
+    const entradaFrase = q('[data-role="galeria-entrada-frase"]');
+    // las comillas grandes y tenues son el mismo elemento decorativo que ya
+    // usan las citas de Historia/Eventos/Voces -- se posicionan una sola vez
+    // acá (el texto es fijo, no cambia con el paso/idioma más que por el
+    // propio cambiarIdioma() global, que ya vuelve a llamar a esta función
+    // para todo .qv-cita cuando corresponde).
+    if (entradaFrase) this.posicionarComillas(entradaFrase);
     let primeraApertura = true;
     const sticky = overlay ? overlay.querySelector('.galeria-sticky') : null;
     if (!overlay || !scroller || !track || !btnAbrir) return;
@@ -2001,54 +2007,70 @@ const App = {
       // no necesita el mismo teatro que entrar.
       //
       // La primera apertura de la sesión suma la frase ("Antes de la
-      // mesa, la mirada.") a mitad de la cortina: NO es un paso aparte
-      // antes del wipe, se revela palabra por palabra (mismo mecanismo
-      // que .hist-quote .word) a medida que el propio borde del wipe se
-      // acerca, y ese mismo borde se la lleva por delante al pasarla de
-      // largo, dejando la foto en su lugar -- una sola cortina de bajada,
-      // el aviso y la foto son un solo gesto, no dos. Por eso esta versión
-      // es más lenta (1700ms vs. 700ms). Repetir esos ~1.7s cada vez que
-      // alguien abre y cierra la galería mientras navega sería cargoso,
-      // así que de la segunda apertura en adelante vuelve a la cortina
-      // simple y rápida, sin la frase.
+      // mesa, la mirada."). Ojo con la versión anterior de esto: la frase
+      // vivía DENTRO de la cortina, así que el mismo clip-path que la
+      // revelaba también la recortaba apenas el borde la pasaba de largo
+      // -- se armaba y al toque se borraba, al revés de lo que tiene que
+      // pasar. Ahora es un elemento aparte con su propio fundido de
+      // opacidad (0 → 1 → 0), que corre MIENTRAS la cortina sigue bajando
+      // (mismo reloj, no un paso separado antes del wipe) pero sin
+      // depender de en qué altura esté el borde en cada momento -- se
+      // arma, se sostiene el tiempo suficiente para leerla y recién se
+      // apaga sola al final, nunca "cortada" a mitad de camino. Por eso
+      // esta versión es bastante más lenta (2600ms vs. 700ms) -- lo
+      // anterior (1700ms con revelado palabra por palabra) todavía se
+      // leía apurado. Repetir esos ~2.6s cada vez que alguien abre y
+      // cierra la galería mientras navega sería cargoso, así que de la
+      // segunda apertura en adelante vuelve a la cortina simple y rápida,
+      // sin la frase.
     const animarEntrada = () => {
       if (!entrada || this.reduced) return;
-      // se consultan las palabras de nuevo en cada apertura, no una sola vez
-      // al construir galeria(): cambiarIdioma() reescribe el innerHTML
-      // completo de [data-i18n="galeriaFrase"] (ES/EN no tienen ni la misma
-      // cantidad de palabras), así que una lista cacheada de antemano
-      // quedaría apuntando a nodos viejos ya fuera del DOM.
-      const entradaPalabras = entradaFrase ? Array.from(entradaFrase.querySelectorAll('.word')) : [];
-      const conFrase = primeraApertura && entradaFrase && entradaPalabras.length;
+      const conFrase = primeraApertura && !!entradaFrase;
       primeraApertura = false;
-      if (entradaFrase) entradaFrase.style.display = conFrase ? 'block' : 'none';
-      entradaPalabras.forEach(w => w.classList.remove('is-in'));
       entrada.style.transition = 'none';
       entrada.style.clipPath = 'inset(0 0 0 0)';
       entrada.style.opacity = '1';
       if (entradaCostura) entradaCostura.style.opacity = '1';
-      const dur = conFrase ? 1700 : 700;
+      if (entradaFrase) entradaFrase.style.opacity = '0';
+      if (!conFrase) {
+        const dur = 700;
+        const t0 = performance.now();
+        const paso = (t) => {
+          const p = Math.min(1, (t - t0) / dur);
+          const ease = 1 - Math.pow(1 - p, 3);
+          entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
+          if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
+          if (p < 1) { requestAnimationFrame(paso); return; }
+          entrada.style.opacity = '0';
+          if (entradaCostura) entradaCostura.style.opacity = '0';
+        };
+        requestAnimationFrame(paso);
+        return;
+      }
+      const dur = 2600;
       const t0 = performance.now();
       const paso = (t) => {
         const p = Math.min(1, (t - t0) / dur);
-        // la versión con frase usa una curva más pareja -- una cortina real
-        // baja a velocidad más constante, no con la frenada marcada del
-        // ease-out que sí tiene sentido en la versión corta sin texto.
-        const ease = conFrase ? p * p * (3 - 2 * p) : 1 - Math.pow(1 - p, 3);
+        // la cortina baja a velocidad pareja durante toda esta versión
+        // larga -- una cortina real cae más o menos constante, no con la
+        // frenada marcada del ease-out que sí tiene sentido en la versión
+        // corta sin texto.
+        const ease = p * p * (3 - 2 * p);
         entrada.style.clipPath = 'inset(' + (ease * 100) + '% 0 0 0)';
         if (entradaCostura) entradaCostura.style.top = (ease * 100) + '%';
-        if (conFrase) {
-          // las palabras terminan de revelarse bastante antes de que el
-          // borde llegue a su altura real (47%, ver CSS) -- si no, se ven
-          // apenas un instante antes de que el mismo borde se las lleve.
-          const nP = entradaPalabras.length;
-          entradaPalabras.forEach((w, i) => {
-            if (p >= (i / nP) * 0.17 + 0.03) w.classList.add('is-in');
-          });
-        }
+        // la frase se arma, se sostiene y se apaga en su propio reloj de
+        // opacidad -- no tiene nada que ver con en qué altura está el
+        // borde de la cortina en cada momento.
+        let op = 0;
+        if (p < 0.08) op = 0;
+        else if (p < 0.30) op = (p - 0.08) / 0.22;
+        else if (p < 0.78) op = 1;
+        else if (p < 0.95) op = 1 - (p - 0.78) / 0.17;
+        entradaFrase.style.opacity = String(op);
         if (p < 1) { requestAnimationFrame(paso); return; }
         entrada.style.opacity = '0';
         if (entradaCostura) entradaCostura.style.opacity = '0';
+        entradaFrase.style.opacity = '0';
       };
       requestAnimationFrame(paso);
     };
