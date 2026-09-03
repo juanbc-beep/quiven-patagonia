@@ -1353,6 +1353,15 @@ button { font: inherit; }
   .galeria-item { transition: opacity 0.3s ease; }
 }
 @media (max-width: 700px) {
+  /* en mobile, "flex-start" (la regla de siempre, ver arriba) dejaba el
+     bloque foto+texto pegado arriba: como la foto tiene un tope de 55svh
+     acá abajo y el texto suele ser corto, el conjunto quedaba mucho más
+     bajo que 100svh, con casi todo el margen sobrante amontonado abajo.
+     "center" lo centra como grupo en el alto disponible -- el padding
+     superior (pensado para no chocar con la barra fija) sigue actuando
+     como piso mínimo, así que en el plato con más texto de todos el
+     resultado es igual que antes; en el resto, ahora se reparte parejo. */
+  .galeria-item { justify-content: center; }
   .galeria-item-photo { max-width: 88vw; max-height: 55svh; }
   .galeria-item-sello { top: -9px; right: -9px; width: clamp(32px, 8vw, 40px); height: clamp(32px, 8vw, 40px); }
   .galeria-info { max-width: 88vw; }
