@@ -655,6 +655,47 @@ button { font: inherit; }
   margin-top: 12px;
   display: block;
 }
+/* sello de archivo: el premio de 2010 es un dato de archivo real (ver
+   hist-caption, FEHGRA), no una frase de marketing -- un timbre estampado
+   en la esquina de la foto lo trata como tal, en vez de una línea de texto
+   más. Rotado como un sello real, nunca perfectamente derecho. */
+.hist-sello {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: rgb(var(--dorado-rgb) / 0.6);
+  transform: rotate(-11deg);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* folio de lectura: cada capítulo lleva su número de página como en un
+   libro impreso -- "02 / 09", en el margen inferior, eco chico de la
+   cifra fantasma grande de la esquina opuesta. */
+.qv-folio {
+  position: absolute;
+  left: 50%;
+  bottom: 2.5%;
+  transform: translateX(-50%);
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-feature-settings: 'tnum' 1;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  color: rgb(var(--dorado-rgb) / 0.32);
+  pointer-events: none;
+  user-select: none;
+}
+
+/* justificación editorial: los párrafos largos de relato (no las citas ni
+   los títulos) se justifican con guiones silábicos, como el cuerpo de un
+   libro impreso -- textura de página, no de sitio web. */
+.qv-editorial {
+  text-align: justify;
+  text-justify: inter-word;
+  -webkit-hyphens: auto;
+  hyphens: auto;
+}
 
 /* bitácora: anotación de cuaderno, no grilla de métricas -- a propósito
    sin números grandes ni tarjetas iguales, para que no lea como
