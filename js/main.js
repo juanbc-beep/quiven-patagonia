@@ -1294,6 +1294,7 @@ const App = {
     };
     this.setEje(0);
     this.ciclarEje();
+    this.pausarCicloFueraDeVista(nodos.closest('[data-cap]'), 'tEje', this.ciclarEje);
     // mismo lenguaje del menú de pasos: flechas cambian de cuadrante cuando
     // la sección está a la vista, sin robarle el foco al resto del sitio
     window.addEventListener('keydown', e => {
@@ -1366,6 +1367,7 @@ const App = {
     };
     this.setMomento(0);
     this.ciclarMomento();
+    this.pausarCicloFueraDeVista(marcas.closest('[data-cap]'), 'tMomento', this.ciclarMomento);
     this.refrescarPase = () => {
       const actual = this.momento;
       this.momento = null;
@@ -1539,6 +1541,7 @@ const App = {
     window.addEventListener('keydown', this.onKey);
     this.setPaso(0);
     this.ciclarPaso();
+    this.pausarCicloFueraDeVista(zona.closest('[data-cap]'), 'tPaso', this.ciclarPaso);
     this.refrescarMenu = () => {
       PASOS.forEach((p, i) => {
         filaTxtEls[i].a.textContent = '0' + (i + 1) + ' · ' + p.n;
@@ -1753,6 +1756,23 @@ const App = {
       });
       xa = 0; xb = -b.scrollWidth / 2;
     };
+  },
+
+  /* Territorio, Fuego y el Menú de Pasos se van rotando solos cada 5-7s
+     (ciclarEje/ciclarMomento/ciclarPaso) para quien no interactúa -- pero
+     esos setInterval() arrancaban una sola vez al cargar la página y
+     seguían reescribiendo texto/estilos para siempre, aunque el visitante
+     ya estuviera leyendo Historia o Voces a kilómetros de ahí. Se pausan
+     apenas la sección sale de pantalla y se reanudan al volver, mismo
+     lenguaje que ya usa lazyVideo() para los <video> de fondo. */
+  pausarCicloFueraDeVista(el, propIntervalo, reanudar) {
+    if (!el) return;
+    const io = new IntersectionObserver(es => es.forEach(e => {
+      if (e.isIntersecting) { reanudar(); }
+      else if (this[propIntervalo]) { clearInterval(this[propIntervalo]); this[propIntervalo] = null; }
+    }), { threshold: 0.05 });
+    io.observe(el);
+    this.observadores.push(io);
   },
 
   /* video de platos cargado recién cuando la sección está por entrar en pantalla --
