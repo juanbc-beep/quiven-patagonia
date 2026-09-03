@@ -2104,13 +2104,20 @@ const App = {
         entradaFrase.style.top = '0%';
       }
       // fase A: la cortina crece de 0% a 100% (cubre la página actual por
-      // completo). Con frase, bien lenta para que dé tiempo a leerla
-      // (3000ms); sin frase, un cover rápido (450ms). Fase B: una vez
-      // 100% negro, se arma la galería detrás y la cortina (+ frase, si
-      // la hay) se retiran con un fundido -- ahí "aparecen las imágenes".
-      const durA = conFrase ? 3000 : 450;
+      // completo). Con frase, todavía lenta para que dé tiempo a leerla
+      // pero no tanto como antes (2400ms, era 3000): la Fase A es la parte
+      // cara de la animación (ver la nota grande en prepararGaleria(), más
+      // arriba) -- acortarla un poco reduce cuánto tiempo real paga ese
+      // costo, sin resignar la lectura (la frase sigue terminando de
+      // formarse bien temprano, a los 45% del recorrido). Sin frase, un
+      // cover rápido (450ms). Fase B (fundido de salida, revela la
+      // primera foto) al revés: más lenta que antes (900ms, era 550) para
+      // que la desaparición se sienta más suave -- acá no hay costo extra
+      // real: la galería ya está armada y quieta detrás, es solo un
+      // cambio de opacidad, el más barato de toda la secuencia.
+      const durA = conFrase ? 2400 : 450;
       const holdMs = conFrase ? 300 : 60;
-      const durB = conFrase ? 550 : 280;
+      const durB = conFrase ? 900 : 280;
       const t0 = performance.now();
       const pasoA = (t) => {
         if (!abierta) return; // se cerró en el medio de la animación
