@@ -1915,6 +1915,14 @@ const App = {
         aplicarSelloFijo(0);
         return;
       }
+      // se resetean los 14 ANTES de medir cualquiera -- si esto corre más
+      // de una vez (resize, fuente que termina de cargar, cambio de
+      // idioma) y se mide con el padding de la vuelta anterior todavía
+      // puesto, "base" deja de ser el mínimo real de siempre y cada plato
+      // termina en un lugar distinto según CUÁNDO se disparó su último
+      // recálculo -- exactamente lo que se veía como fotos que no
+      // coinciden ni en tamaño ni en posición entre sí.
+      items.forEach(it => { it.style.paddingTop = ''; it.style.paddingBottom = ''; });
       const gapPx = parseFloat(getComputedStyle(items[0]).rowGap) || 18;
       paddingsMobile = [];
       items.forEach((it, i) => {
@@ -1923,8 +1931,6 @@ const App = {
         const cs = getComputedStyle(it);
         const baseTop = parseFloat(cs.paddingTop) || 0;
         const baseBottom = parseFloat(cs.paddingBottom) || 0;
-        it.style.paddingTop = '';
-        it.style.paddingBottom = '';
         const disponible = it.clientHeight - baseTop - baseBottom;
         const contenido = foto.offsetHeight + gapPx + info.offsetHeight;
         const libre = Math.max(0, disponible - contenido);
@@ -1941,10 +1947,21 @@ const App = {
     // (antes de tener texto) da un alto de menos, y centra mal.
     centrarMobile();
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(centrarMobile);
-    let tCentrarGaleria;
+    let tCentrarGaleria, anchoCentrado = window.innerWidth;
     window.addEventListener('resize', () => {
       clearTimeout(tCentrarGaleria);
-      tCentrarGaleria = setTimeout(centrarMobile, 160);
+      tCentrarGaleria = setTimeout(() => {
+        // en mobile, el navegador dispara "resize" todo el tiempo con solo
+        // el ALTO cambiando -- la barra de direcciones que se esconde/asoma
+        // al scrollear, no una rotación ni un cambio real de layout. Sin
+        // este filtro, cada scroll normal por el sitio (ni siquiera adentro
+        // de la galería) terminaba disparando un recálculo completo de los
+        // 14 platos de la nada, con el riesgo de un parpadeo si coincide
+        // con el momento justo de una transición. Solo importa el ancho.
+        if (window.innerWidth === anchoCentrado) return;
+        anchoCentrado = window.innerWidth;
+        centrarMobile();
+      }, 160);
     });
     this.refrescarGaleria = () => { pintarNumeros(); centrarMobile(); };
     // colores de fondo pre-parseados una sola vez, no en cada frame
