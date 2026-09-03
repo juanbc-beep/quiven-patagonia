@@ -1924,45 +1924,40 @@ const App = {
       // coinciden ni en tamaño ni en posición entre sí.
       items.forEach(it => { it.style.paddingTop = ''; it.style.paddingBottom = ''; });
       const gapPx = parseFloat(getComputedStyle(items[0]).rowGap) || 18;
+      const cs0 = getComputedStyle(items[0]);
+      const baseTop = parseFloat(cs0.paddingTop) || 0;
+      const baseBottom = parseFloat(cs0.paddingBottom) || 0;
+      const altoCaja = items[0].clientHeight;
+      const disponible = altoCaja - baseTop - baseBottom;
+      const contenidos = items.map((it, i) => {
+        const foto = fotos[i], info = nombres[i];
+        return (foto && info) ? (foto.offsetHeight + gapPx + info.offsetHeight) : 0;
+      });
+      // el padding-top tiene que ser el MISMO número de píxeles en los 14
+      // platos, sin excepción -- el wipe entre fotos (pintarGaleria(), acá
+      // abajo) desliza el marco de una encima del otro asumiendo que las
+      // dos empiezan exactamente en el mismo punto (ver la nota grande,
+      // más abajo, sobre por qué el clip-path del wipe va sobre un marco
+      // "del mismo tamaño que la foto"). Centrar cada plato por separado
+      // según SU PROPIO texto (como se hacía antes) rompía esa igualdad:
+      // en la transición entre dos platos con textos de distinto largo,
+      // sus fotos arrancaban en alturas distintas y el wipe se veía como
+      // dos recuadros superpuestos en vez de una cortina prolija. Se
+      // calcula el margen a partir del plato con MÁS contenido (el que
+      // menos espacio libre tiene) y se lo aplica a los 14 por igual --
+      // en los platos con menos texto queda un resto abajo sin repartir,
+      // pero eso no se nota ni se mueve; un desalineado en el wipe sí.
+      const contenidoMax = Math.max.apply(null, contenidos);
+      const libreMax = Math.max(0, disponible - contenidoMax);
+      const topUniforme = baseTop + libreMax / 2;
       paddingsMobile = [];
       items.forEach((it, i) => {
-        const foto = fotos[i], info = nombres[i];
-        if (!foto || !info) return;
-        const cs = getComputedStyle(it);
-        const baseTop = parseFloat(cs.paddingTop) || 0;
-        const baseBottom = parseFloat(cs.paddingBottom) || 0;
-        const disponible = it.clientHeight - baseTop - baseBottom;
-        const contenido = foto.offsetHeight + gapPx + info.offsetHeight;
-        const libre = Math.max(0, disponible - contenido);
-        const top = baseTop + libre / 2, bottom = baseBottom + libre / 2;
-        it.style.paddingTop = top + 'px';
+        const bottom = Math.max(baseBottom, altoCaja - topUniforme - contenidos[i]);
+        it.style.paddingTop = topUniforme + 'px';
         it.style.paddingBottom = bottom + 'px';
-        paddingsMobile[i] = { top: top, bottom: bottom };
+        paddingsMobile[i] = { top: topUniforme, bottom: bottom };
       });
       aplicarSelloFijo(idxActual >= 0 ? idxActual : 0);
-      // TEMPORAL: panel de diagnóstico visible con ?debug=1 en la URL --
-      // para ver en un celular real qué está midiendo/calculando esto
-      // sin necesitar devtools. Se saca en cuanto esté diagnosticado.
-      if (/[?&]debug=1/.test(location.search)) {
-        let panel = document.getElementById('qv-debug-galeria');
-        if (!panel) {
-          panel = document.createElement('div');
-          panel.id = 'qv-debug-galeria';
-          panel.style.cssText = 'position:fixed;left:4px;bottom:4px;z-index:9999;background:#000;color:#0f0;font:10px monospace;padding:8px;max-width:96vw;white-space:pre-wrap;line-height:1.4;pointer-events:none';
-          document.body.appendChild(panel);
-        }
-        const it0 = items[0], foto0 = fotos[0], info0 = nombres[0];
-        const cs0 = it0 ? getComputedStyle(it0) : null;
-        panel.textContent =
-          'innerWidth=' + window.innerWidth + ' innerHeight=' + window.innerHeight + '\n' +
-          'this.chico=' + this.chico + ' ancho(App)=' + this.ancho + '\n' +
-          'item0.clientHeight=' + (it0 ? it0.clientHeight : 'n/a') + '\n' +
-          'item0 paddingTop=' + (cs0 ? cs0.paddingTop : 'n/a') + ' paddingBottom=' + (cs0 ? cs0.paddingBottom : 'n/a') + '\n' +
-          'foto0.offsetHeight=' + (foto0 ? foto0.offsetHeight : 'n/a') + ' offsetWidth=' + (foto0 ? foto0.offsetWidth : 'n/a') + '\n' +
-          'info0.offsetHeight=' + (info0 ? info0.offsetHeight : 'n/a') + '\n' +
-          'overlay display=' + getComputedStyle(overlay).display + '\n' +
-          'UA=' + navigator.userAgent;
-      }
     };
     pintarNumeros();
     // corre DESPUÉS de pintarNumeros(): "PLATO 01 · DE 14" es parte del
