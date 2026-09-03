@@ -313,10 +313,22 @@
             <circle data-role="mapa-arco" cx="50" cy="50" r="50" fill="none" stroke="#c47b3e" stroke-width="0.35" stroke-dasharray="78.5 235.5" stroke-dashoffset="0" style="transition:stroke-dashoffset .9s cubic-bezier(.16,1,.3,1)"></circle>
           </svg>
           <div style="position:relative;width:54%;aspect-ratio:1/1;border-radius:50%;overflow:hidden;box-shadow:0 30px 90px rgba(0,0,0,0.6)">
-            <img data-eje-img="0" src="assets/img/LGCU0954.webp" width="600" height="900" alt="Producto de mar" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1)">
-            <img data-eje-img="1" src="assets/img/DSC_0023.webp" width="591" height="885" alt="Cordero de montaña" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1)">
-            <img data-eje-img="2" src="assets/img/IMG_9752.webp" width="600" height="900" alt="Huerta patagónica" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1)">
-            <img data-eje-img="3" src="assets/img/XKRC3195.webp" width="600" height="900" alt="Trucha del Nahuel Huapi" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1)">
+            <picture style="position:absolute;inset:0;width:100%;height:100%">
+              <source type="image/avif" srcset="assets/img/LGCU0954.avif">
+              <img data-eje-img="0" src="assets/img/LGCU0954.webp" width="600" height="900" alt="Producto de mar" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1);display:block">
+            </picture>
+            <picture style="position:absolute;inset:0;width:100%;height:100%">
+              <source type="image/avif" srcset="assets/img/DSC_0023.avif">
+              <img data-eje-img="1" src="assets/img/DSC_0023.webp" width="591" height="885" alt="Cordero de montaña" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1);display:block">
+            </picture>
+            <picture style="position:absolute;inset:0;width:100%;height:100%">
+              <source type="image/avif" srcset="assets/img/IMG_9752.avif">
+              <img data-eje-img="2" src="assets/img/IMG_9752.webp" width="600" height="900" alt="Huerta patagónica" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1);display:block">
+            </picture>
+            <picture style="position:absolute;inset:0;width:100%;height:100%">
+              <source type="image/avif" srcset="assets/img/XKRC3195.avif">
+              <img data-eje-img="3" src="assets/img/XKRC3195.webp" width="600" height="900" alt="Trucha del Nahuel Huapi" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1s ease,transform 1.6s cubic-bezier(.16,1,.3,1);display:block">
+            </picture>
           </div>
           <svg viewBox="0 0 100 100" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1" aria-hidden="true">
             <circle cx="50" cy="50" r="44" fill="none" stroke="rgba(242,236,225,0.09)" stroke-width="0.3"></circle>
