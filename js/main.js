@@ -185,6 +185,14 @@ const App = {
       || (navigator.hardwareConcurrency != null && navigator.hardwareConcurrency <= 4)
       || this.datosLimitados;
     document.documentElement.classList.toggle('gama-baja', this.gamaBaja);
+    // la foto de fondo mobile de cada capítulo (swap() en mostrarCap) se pisa
+    // con img.src directo, sin pasar por un <picture> -- así que sin esto
+    // nunca pedía AVIF aunque el archivo ya exista para las 8 fotos que rota.
+    // Se detecta soporte una sola vez con una imagen AVIF real de 2x2.
+    this.soportaAvif = false;
+    const avifTest = new Image();
+    avifTest.onload = () => { this.soportaAvif = avifTest.width > 0; };
+    avifTest.src = 'data:image/avif;base64,AAAAIGZ0eXBhdmlmAAAAAGF2aWZtaWYxbWlhZk1BMUIAAAD5bWV0YQAAAAAAAAAvaGRscgAAAAAAAAAAcGljdAAAAAAAAAAAAAAAAFBpY3R1cmVIYW5kbGVyAAAAAA5waXRtAAAAAAABAAAAHmlsb2MAAAAARAAAAQABAAAAAQAAASEAAAAbAAAAKGlpbmYAAAAAAAEAAAAaaW5mZQIAAAAAAQAAYXYwMUNvbG9yAAAAAGppcHJwAAAAS2lwY28AAAAUaXNwZQAAAAAAAAACAAAAAgAAABBwaXhpAAAAAAMICAgAAAAMYXYxQ4EADAAAAAATY29scm5jbHgAAgACAAIAAAAAF2lwbWEAAAAAAAAAAQABBAECgwQAAAAjbWRhdAoJAAAAAAZtfMAgMg4QAMAAAAKAAAAAsBKZyA==';
     this.observadores = [];
     this.setLang(window.I18N ? window.I18N.lang : 'es');
     this.calcMedidas();
@@ -970,11 +978,22 @@ const App = {
       s._nodo.label.style.color = on ? '#e0a45f' : '#8d7f70';
     });
     const swap = (img, src) => {
-      if (!img || !src || img.dataset.src === src) return;
-      img.dataset.src = src;
+      if (!img || !src) return;
+      // el dedup se guarda con la ruta YA resuelta (avif o webp), no con la
+      // ruta cruda del capítulo -- si se guardara la cruda, el primer
+      // capítulo mostrado (antes de que this.soportaAvif termine de
+      // resolverse) quedaba pegado en .webp para siempre en esa sección,
+      // porque la próxima vez que tocara ese mismo capítulo la ruta cruda
+      // coincidía igual y nunca se volvía a intentar con AVIF.
+      const real = this.soportaAvif ? src.replace(/\.webp$/, '.avif') : src;
+      if (img.dataset.src === real) return;
+      img.dataset.src = real;
+      // si el .avif no existiera para alguna foto nueva, esto pisa de vuelta
+      // al .webp en vez de dejar la sección sin foto de fondo
+      img.onerror = () => { if (img.src.endsWith('.avif')) { img.src = src; img.dataset.src = src; } };
       img.style.opacity = '0';
       img.style.transform = 'scale(1.18)';
-      setTimeout(() => { if (!img) return; img.src = src; img.style.opacity = '1'; img.style.transform = 'scale(1)'; }, 300);
+      setTimeout(() => { if (!img) return; img.src = real; img.style.opacity = '1'; img.style.transform = 'scale(1)'; }, 300);
     };
     swap(q('[data-role="movil-img"]'), sec.dataset.viaje);
     // en mobile no hay rail con los 8 puntos a la vista como en desktop -- sin el
