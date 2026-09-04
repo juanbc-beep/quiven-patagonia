@@ -1283,7 +1283,12 @@ const App = {
       const b = document.createElement('button');
       b.type = 'button';
       b.dataset.cursor = e.n;
-      b.style.cssText = 'position:absolute;left:' + (50 + Math.cos(ang) * 42) + '%;top:' + (50 + Math.sin(ang) * 47) + '%;transform:translate(-50%,-50%);background:var(--negro-1);border:1px solid rgb(var(--dorado-rgb) / 0.4);color:var(--arena);font-family:inherit;font-weight:300;font-size:0.6875rem;letter-spacing:0.16em;padding:13px 13px;min-height:44px;border-radius:999px;cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);white-space:nowrap';
+      // "border:1px solid rgb(var(--x-rgb) / a)" como shorthand con var() adentro
+      // no lo parsea ningún navegador -- toda la declaración se descarta en
+      // silencio (sin width, sin style, sin color). Longhands por separado sí
+      // resuelven el var() bien. Mismo patrón en todo este archivo, ver charla
+      // del 04/09 sobre el círculo de fotos que parecía "vacío" en Territorio.
+      b.style.cssText = 'position:absolute;left:' + (50 + Math.cos(ang) * 42) + '%;top:' + (50 + Math.sin(ang) * 47) + '%;transform:translate(-50%,-50%);background:var(--negro-1);border-width:1px;border-style:solid;border-color:rgb(var(--dorado-rgb) / 0.4);color:var(--arena);font-family:inherit;font-weight:300;font-size:0.6875rem;letter-spacing:0.16em;padding:13px 13px;min-height:44px;border-radius:999px;cursor:pointer;transition:all .4s cubic-bezier(.16,1,.3,1);white-space:nowrap';
       b.textContent = e.n;
       const act = () => { this.setEje(i); this.ciclarEje(); };
       b.addEventListener('click', act);
@@ -1316,7 +1321,7 @@ const App = {
       });
       if (ondas && !this.reduced) {
         const s = document.createElement('span');
-        s.style.cssText = 'width:54%;aspect-ratio:1/1;border:1px solid rgb(var(--dorado-rgb) / 0.4);border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
+        s.style.cssText = 'width:54%;aspect-ratio:1/1;border-width:1px;border-style:solid;border-color:rgb(var(--dorado-rgb) / 0.4);border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
         ondas.appendChild(s);
         setTimeout(() => s.remove(), 2400);
       }
@@ -1340,7 +1345,7 @@ const App = {
         chips.textContent = '';
         EJES[i].ing.forEach(g => {
           const c = document.createElement('span');
-          c.style.cssText = 'font-size:0.6875rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--arena);border:1px solid rgb(var(--crema-rgb) / 0.16);padding:6px 10px;border-radius:999px';
+          c.style.cssText = 'font-size:0.6875rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--arena);border-width:1px;border-style:solid;border-color:rgb(var(--crema-rgb) / 0.16);padding:6px 10px;border-radius:999px';
           c.textContent = g;
           chips.appendChild(c);
         });
@@ -1392,7 +1397,7 @@ const App = {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = m[0];
-      b.style.cssText = "background:none;border:1px solid rgb(var(--crema-rgb) / 0.16);color:var(--marron-tenue);font-family:'Piazzolla',serif;font-size:0.8rem;letter-spacing:0.06em;padding:13px 13px;min-height:44px;border-radius:999px;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1)";
+      b.style.cssText = "background:none;border-width:1px;border-style:solid;border-color:rgb(var(--crema-rgb) / 0.16);color:var(--marron-tenue);font-family:'Piazzolla',serif;font-size:0.8rem;letter-spacing:0.06em;padding:13px 13px;min-height:44px;border-radius:999px;cursor:pointer;transition:all .35s cubic-bezier(.16,1,.3,1)";
       const act = () => { this.setMomento(i); this.ciclarMomento(); };
       b.addEventListener('click', act);
       if (!this.coarse) b.addEventListener('mouseenter', act);
@@ -1507,7 +1512,7 @@ const App = {
       imgs.forEach((im, n) => im.classList.toggle('is-active', n === i));
       if (ondas && !this.reduced) {
         const s = document.createElement('span');
-        s.style.cssText = 'position:absolute;inset:0;border:1px solid rgb(var(--dorado-rgb) / 0.4);border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
+        s.style.cssText = 'position:absolute;inset:0;border-width:1px;border-style:solid;border-color:rgb(var(--dorado-rgb) / 0.4);border-radius:50%;animation:qvOnda 2.2s ease-out forwards';
         ondas.appendChild(s);
         setTimeout(() => s.remove(), 2400);
       }
@@ -1520,7 +1525,7 @@ const App = {
         chips.textContent = '';
         p.ing.forEach(ing => {
           const c = document.createElement('span');
-          c.style.cssText = 'font-size:0.6875rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--arena);border:1px solid rgb(var(--crema-rgb) / 0.16);padding:7px 11px;border-radius:999px';
+          c.style.cssText = 'font-size:0.6875rem;letter-spacing:0.12em;text-transform:uppercase;color:var(--arena);border-width:1px;border-style:solid;border-color:rgb(var(--crema-rgb) / 0.16);padding:7px 11px;border-radius:999px';
           c.textContent = ing;
           chips.appendChild(c);
         });
@@ -1769,9 +1774,9 @@ const App = {
       // el inset shadow es el mismo lenguaje "envejecido" que .hist-photo::after
       // en La Historia -- oscurece apenas las esquinas de la tarjeta, para que
       // las citas de comensales se sientan tan de archivo como las fotos del chef
-      d.style.cssText = 'flex:0 0 auto;width:min(78vw,400px);border:1px solid rgb(var(--crema-rgb) / 0.12);background:var(--negro-1);padding:24px 26px;border-radius:2px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 28px 4px rgba(0,0,0,0.3);transition:border-color .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
+      d.style.cssText = 'flex:0 0 auto;width:min(78vw,400px);border-width:1px;border-style:solid;border-color:rgb(var(--crema-rgb) / 0.12);background:var(--negro-1);padding:24px 26px;border-radius:2px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 28px 4px rgba(0,0,0,0.3);transition:border-color .4s ease,transform .5s cubic-bezier(.16,1,.3,1)';
       const sello = document.createElement('span');
-      sello.style.cssText = "width:26px;height:26px;border-radius:50%;border:1px solid rgb(var(--dorado-rgb) / 0.5);display:flex;align-items:center;justify-content:center;font-family:'Piazzolla',serif;font-size:0.6rem;color:var(--dorado);flex:0 0 auto";
+      sello.style.cssText = "width:26px;height:26px;border-radius:50%;border-width:1px;border-style:solid;border-color:rgb(var(--dorado-rgb) / 0.5);display:flex;align-items:center;justify-content:center;font-family:'Piazzolla',serif;font-size:0.6rem;color:var(--dorado);flex:0 0 auto";
       sello.textContent = String(i + 1);
       const p = document.createElement('p');
       p.className = 'qv-cita';
