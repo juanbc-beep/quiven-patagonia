@@ -416,6 +416,17 @@ const App = {
     const html = document.documentElement;
     html.style.overflow = on ? 'hidden' : '';
     document.body.style.overflow = on ? 'hidden' : '';
+    // el nav, el botón de WhatsApp y "volver arriba" son fixed con menos
+    // z-index que cualquier overlay (galería, portal) -- en mobile, el
+    // navegador puede tardar un instante en re-estirar un position:fixed
+    // a la altura real cuando la barra de direcciones se esconde/aparece
+    // durante el scroll, y en ese instante se ve lo que hay detrás. Sin
+    // esto, ese parpadeo dejaba asomar el botón de WhatsApp (u otro fixed)
+    // por abajo mientras se scrolleaba adentro de un overlay abierto.
+    ['[data-role="nav"]', '.wa-fab', '.top-fab'].forEach(s => {
+      const el = q(s);
+      if (el) { el.style.visibility = on ? 'hidden' : ''; }
+    });
   },
 
   abrirPortal() {
