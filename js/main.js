@@ -995,7 +995,12 @@ const App = {
       img.style.transform = 'scale(1.18)';
       setTimeout(() => { if (!img) return; img.src = real; img.style.opacity = '1'; img.style.transform = 'scale(1)'; }, 300);
     };
-    swap(q('[data-role="movil-img"]'), sec.dataset.viaje);
+    // en desktop [data-role="movil"] es display:none -- pero swap() pisa
+    // el src igual, y eso alcanza para bajar la foto aunque nunca se vea
+    // (loading="lazy" no lo frena: el salto de src es vía JS, no parseo
+    // inicial). Sin el chequeo, cada cambio de capítulo en desktop bajaba
+    // de gusto una foto invisible.
+    if (this.chico) swap(q('[data-role="movil-img"]'), sec.dataset.viaje);
     // en mobile no hay rail con los 8 puntos a la vista como en desktop -- sin el
     // total, "01" se puede leer como un id cualquiera en vez de "vas por acá"
     const etiqueta = capLabel(sec) + ' · ' + (this.capActual + 1) + '/' + this.caps.length;
