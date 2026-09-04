@@ -1063,12 +1063,19 @@ const App = {
     if (!this._dGeom) this._dGeom = { top: els.zona.offsetTop, alto: els.zona.offsetHeight };
     const alto = this._dGeom.alto - window.innerHeight;
     const p = clamp((y - this._dGeom.top) / Math.max(1, alto), 0, 1);
+    const finZona = this._dGeom.top + this._dGeom.alto;
 
     // ya quedó asentada en su valor final de un lado o del otro -- no hay
     // nada nuevo que pintar hasta que el usuario vuelva a entrar en la zona.
+    // OJO: "p" llega a 1 apenas se cruza finZona, pero granoAvance (más abajo)
+    // sigue decayendo un viewport entero después de eso -- asentar solo por
+    // "p" cortaba esa cola a mitad de camino y el grano quedaba prendido al
+    // máximo el resto de la página entera (bug real, ver charla del 04/09).
+    const fueraDelTodo = y >= finZona + window.innerHeight;
     const primeraVez = this._dP === undefined;
-    const yaAsentada = !primeraVez && ((p <= 0 && this._dP <= 0) || (p >= 1 && this._dP >= 1));
+    const yaAsentada = !primeraVez && ((p <= 0 && this._dP <= 0) || (p >= 1 && this._dP >= 1 && fueraDelTodo && this._dFueraDelTodo));
     this._dP = p;
+    this._dFueraDelTodo = fueraDelTodo;
     if (yaAsentada) return;
 
     // ritmo de aproximación durante el primer tramo -- se usa nada más para
@@ -1076,7 +1083,6 @@ const App = {
     this.aproxAvance = clamp(p / 0.38, 0, 1);
     // presencia real dentro (o recién saliendo) del descenso: el grano de fondo
     // sube con la aproximación y se apaga solo, no queda prendido el resto del sitio
-    const finZona = this._dGeom.top + this._dGeom.alto;
     const presencia = 1 - clamp((y - finZona) / window.innerHeight, 0, 1);
     this.granoAvance = this.aproxAvance * presencia;
 
