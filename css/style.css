@@ -935,6 +935,11 @@ button { font: inherit; }
 .galeria-overlay {
   position: fixed;
   inset: 0;
+  /* redundante con inset:0 en la mayoría de los navegadores, pero fixed+inset
+     no siempre sigue el viewport real cuando la barra del navegador se
+     esconde/aparece en mobile -- height explícito en dvh es una segunda
+     red de seguridad para ese caso. */
+  height: 100dvh;
   z-index: 500;
   display: none;
   background: var(--negro-1);
@@ -943,6 +948,7 @@ button { font: inherit; }
 .galeria-fondo {
   position: absolute;
   inset: 0;
+  height: 100dvh;
   z-index: 0;
   background: var(--negro-1);
 }
