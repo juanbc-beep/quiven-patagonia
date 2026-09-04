@@ -2219,6 +2219,27 @@ const App = {
       items.forEach(it => { const img = it.querySelector('img'); if (img) img.loading = 'eager'; });
       pintarGaleria();
     };
+    // 100dvh en CSS no alcanzó en Chrome/Android: ese navegador esconde la
+    // barra de direcciones cambiando el viewport VISUAL, sin tocar el
+    // viewport de LAYOUT del que depende dvh -- por eso dvh se quedaba
+    // pegado al alto "con barra" y quedaba un hueco negro (el fondo de
+    // .galeria-overlay) del tamaño de la barra escondida, sostenido
+    // mientras la barra siguiera afuera. window.visualViewport sí refleja
+    // el alto real en todo momento -- se lo aplica a mano, en píxeles, a
+    // los tres elementos que antes dependían de dvh.
+    const ajustarViewportReal = () => {
+      if (!abierta) return;
+      const vv = window.visualViewport;
+      const alto = Math.round(vv ? vv.height : window.innerHeight) + 'px';
+      overlay.style.height = alto;
+      if (fondo) fondo.style.height = alto;
+      if (sticky) sticky.style.height = alto;
+    };
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', ajustarViewportReal);
+    } else {
+      window.addEventListener('resize', ajustarViewportReal);
+    }
     const revelarGaleria = () => {
       // la galería ya está armada y pintada (prepararGaleria, más arriba) --
       // acá solo falta hacerla visible. Un cambio de opacidad es barato
@@ -2228,6 +2249,7 @@ const App = {
       overlay.style.opacity = '1';
       overlay.setAttribute('aria-hidden', 'false');
       this.bloquear(true);
+      ajustarViewportReal();
       if (btnCerrar) btnCerrar.focus();
     };
     const animarEntrada = () => {
@@ -2341,6 +2363,13 @@ const App = {
       // hasta que revelarGaleria() la vuelva a pisar, un instante blanco
       // (bah, negro) de más si algo tarda en llegar a esa línea.
       overlay.style.opacity = '';
+      // limpia los altos en px que dejó ajustarViewportReal() -- si no,
+      // la próxima apertura arranca un instante con el alto de la sesión
+      // anterior (podría ser de otra orientación) hasta que el primer
+      // resize del visualViewport los vuelva a fijar.
+      overlay.style.height = '';
+      if (fondo) fondo.style.height = '';
+      if (sticky) sticky.style.height = '';
       this.bloquear(false);
       if (ultimoFoco && ultimoFoco.focus) ultimoFoco.focus();
       // por si se cerró en medio de la animación de entrada (fase A o B
