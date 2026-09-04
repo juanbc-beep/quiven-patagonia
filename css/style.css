@@ -785,6 +785,15 @@ button { font: inherit; }
   .nav-audio-label { display: none; }
   .nav-audio { padding: 11px 12px; gap: 7px; }
   .nav-cta { padding: 11px 15px; }
+  /* estos tres miden menos de 44x44 en mobile con solo su padding inline
+     (37x39 / 41x43 / 43x41 medidos) -- !important porque un estilo inline
+     nunca pierde contra una regla externa sin él. min-width/height no
+     toca el padding/contenido, solo le pone un piso a la caja. */
+  #audio-toggle-btn, #lang-toggle-btn, [data-role="galeria-abrir"] {
+    min-width: 44px !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
 }
 @media (max-width: 360px) {
   [data-role="nav"] { gap: 6px; }

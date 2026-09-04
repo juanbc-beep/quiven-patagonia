@@ -2364,6 +2364,20 @@ const App = {
     window.addEventListener('keydown', e => {
       if (!abierta) return;
       if (e.key === 'Escape') { cerrar(); return; }
+      // sin esto Tab se escapaba del diálogo hacia el resto de la página --
+      // visualmente tapada por el overlay, pero perfectamente alcanzable
+      // por teclado (los puntos del Descenso, el link "reservar mesa", etc.)
+      if (e.key === 'Tab') {
+        const focusables = [btnCerrar, scroller].filter(el => el);
+        if (!focusables.length) return;
+        const i = focusables.indexOf(document.activeElement);
+        e.preventDefault();
+        const siguiente = e.shiftKey
+          ? focusables[i <= 0 ? focusables.length - 1 : i - 1]
+          : focusables[i === -1 || i === focusables.length - 1 ? 0 : i + 1];
+        siguiente.focus();
+        return;
+      }
       // flechas: saltan al siguiente/anterior plato ya asentado (sin cortina a mitad de camino)
       if (e.key === 'ArrowDown' || e.key === 'ArrowRight') { e.preventDefault(); irAIndice((idxActual < 0 ? 0 : idxActual) + 1); }
       else if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') { e.preventDefault(); irAIndice((idxActual < 0 ? 0 : idxActual) - 1); }

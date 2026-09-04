@@ -20,6 +20,7 @@ window.I18N = (function () {
     galeriaAria: { es: 'Galería de platos', en: 'Dish gallery' },
     galeriaTitulo: { es: 'Nuestros Platos', en: 'Our Dishes' },
     galeriaCerrarAria: { es: 'Cerrar galería', en: 'Close gallery' },
+    galeriaScrollAria: { es: 'Desplazamiento de fotos', en: 'Photo scroll' },
     galeriaHint: { es: 'Deslizá o usá las flechas', en: 'Scroll or use the arrow keys' },
     // "es" fijo acá a propósito, no capturado por fill() como el resto del
     // diccionario: posicionarComillas() le agrega hijos (las comillas
