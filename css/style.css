@@ -1009,7 +1009,15 @@ button { font: inherit; }
 .galeria-sticky {
   position: sticky;
   top: 0;
+  /* svh es el viewport "chico" (asume la barra del navegador siempre
+     visible) -- fijo dentro de un overlay position:fixed que sí sigue el
+     viewport real. Al scrollear en mobile la barra se esconde, el
+     viewport real crece, y esta caja se quedaba en el tamaño chico:
+     quedaba un hueco abajo mostrando el negro del overlay por detrás.
+     dvh sí se actualiza en vivo con el viewport real -- svh como
+     fallback nada más para el puñado de navegadores viejos sin dvh. */
   height: 100svh;
+  height: 100dvh;
   overflow: hidden;
 }
 .galeria-capas { position: relative; width: 100%; height: 100%; }
