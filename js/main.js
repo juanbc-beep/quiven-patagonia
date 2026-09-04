@@ -1071,7 +1071,13 @@ const App = {
     // sigue decayendo un viewport entero después de eso -- asentar solo por
     // "p" cortaba esa cola a mitad de camino y el grano quedaba prendido al
     // máximo el resto de la página entera (bug real, ver charla del 04/09).
-    const fueraDelTodo = y >= finZona + window.innerHeight;
+    // la cola de apagado del grano recorre esta distancia -- antes eran
+    // window.innerHeight (hasta 844px en mobile), pero Territorio arranca a
+    // apenas ~75px de finZona, así que su foto circular quedaba viéndose
+    // todavía a mitad de camino del decaimiento cuando el usuario llegaba.
+    // 260px la termina bien antes de que esa foto esté centrada en pantalla.
+    const COLA_GRANO = 260;
+    const fueraDelTodo = y >= finZona + COLA_GRANO;
     const primeraVez = this._dP === undefined;
     const yaAsentada = !primeraVez && ((p <= 0 && this._dP <= 0) || (p >= 1 && this._dP >= 1 && fueraDelTodo && this._dFueraDelTodo));
     this._dP = p;
@@ -1083,7 +1089,7 @@ const App = {
     this.aproxAvance = clamp(p / 0.38, 0, 1);
     // presencia real dentro (o recién saliendo) del descenso: el grano de fondo
     // sube con la aproximación y se apaga solo, no queda prendido el resto del sitio
-    const presencia = 1 - clamp((y - finZona) / window.innerHeight, 0, 1);
+    const presencia = 1 - clamp((y - finZona) / COLA_GRANO, 0, 1);
     this.granoAvance = this.aproxAvance * presencia;
 
     // la foto de fondo (sobrevuelo inicial) se queda de entrada y se apaga
