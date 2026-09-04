@@ -41,11 +41,11 @@
      griego, vietnamita, etc. que traía el link de Google Fonts por defecto -->
 <link rel="preload" href="assets/fonts/piazzolla-regular.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="assets/fonts/manrope-regular.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="assets/fonts/plexmono-400.woff2" as="font" type="font/woff2" crossorigin>
 <!-- poster del video del portal: es lo primero que se ve (LCP real), antes de
      que el video mismo termine de bajar -- se adelanta su descarga -->
 <link rel="preload" href="assets/img/2018-03-05-PHOTO-00000187-1024x683.webp" as="image" fetchpriority="high">
-<link rel="stylesheet" href="css/style.css?v=73">
-<script defer src="js/quiven-3d.js?v=32"></script>
+<link rel="stylesheet" href="css/style.css?v=74">
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -370,10 +370,10 @@
               <div data-role="servicio-marcas" style="display:flex;gap:9px;margin-top:clamp(16px,3svh,30px);flex-wrap:wrap"></div>
             </div>
             <div data-role="servicio-tilt" style="position:relative;width:100%;aspect-ratio:16/10;border:1px solid rgba(242,236,225,0.12);overflow:hidden;background:#0b0908;transition:transform .35s cubic-bezier(.16,1,.3,1);transform-style:preserve-3d;will-change:transform">
-              <img data-servicio-img="0" src="assets/img/2018-04-03-PHOTO-00000825.webp" width="854" height="560" alt="Mise en place" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)">
-              <img data-servicio-img="1" src="assets/img/2018-04-03-PHOTO-00000814.webp" width="854" height="575" alt="La brigada emplatando" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)">
-              <img data-servicio-img="2" src="assets/img/IMG_0980-1.webp" width="567" height="704" alt="El detalle final con pinza" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)">
-              <img data-servicio-img="3" src="assets/img/2018-04-03-PHOTO-00000810-1024x683.webp" width="900" height="600" alt="Bocados listos para salir" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)">
+              <picture><source type="image/avif" srcset="assets/img/2018-04-03-PHOTO-00000825.avif"><img data-servicio-img="0" src="assets/img/2018-04-03-PHOTO-00000825.webp" width="854" height="560" alt="Mise en place" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)"></picture>
+              <picture><source type="image/avif" srcset="assets/img/2018-04-03-PHOTO-00000814.avif"><img data-servicio-img="1" src="assets/img/2018-04-03-PHOTO-00000814.webp" width="854" height="575" alt="La brigada emplatando" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)"></picture>
+              <picture><source type="image/avif" srcset="assets/img/IMG_0980-1.avif"><img data-servicio-img="2" src="assets/img/IMG_0980-1.webp" width="567" height="704" alt="El detalle final con pinza" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)"></picture>
+              <picture><source type="image/avif" srcset="assets/img/2018-04-03-PHOTO-00000810-1024x683.avif"><img data-servicio-img="3" src="assets/img/2018-04-03-PHOTO-00000810-1024x683.webp" width="900" height="600" alt="Bocados listos para salir" loading="lazy" decoding="async" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity 1.1s ease,transform 3s cubic-bezier(.16,1,.3,1)"></picture>
               <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(11,9,8,0) 55%,rgba(11,9,8,0.78) 100%)"></div>
               <div data-role="servicio-sheen" class="hist-sheen" aria-hidden="true"></div>
               <div data-role="servicio-pie" style="position:absolute;left:clamp(13px,3vw,22px);bottom:clamp(12px,2.4vw,18px);font-size:clamp(0.46rem,1.4vw,0.6rem);letter-spacing:0.2em;color:#cbbca9">COCINA QUIVEN · SERVICIO DE NOCHE</div>
@@ -405,11 +405,11 @@
           <div data-role="plato-stage" class="plato-stage">
             <div data-role="plato-tilt" class="plato-tilt">
               <div class="plato-photo-wrap">
-                <img data-plato-img="0" src="assets/img/DSC_9992.webp" width="394" height="590" alt="Paso 01" loading="lazy" decoding="async" draggable="false" class="is-active">
-                <img data-plato-img="1" src="assets/img/23ea018e-9548-4b25-a894-cfe7a261c156.webp" width="600" height="900" alt="Paso 02" loading="lazy" decoding="async" draggable="false">
-                <img data-plato-img="2" src="assets/img/IMG_E4134.webp" width="900" height="878" alt="Paso 03" loading="lazy" decoding="async" draggable="false">
-                <img data-plato-img="3" src="assets/img/DSC_9856.webp" width="394" height="590" alt="Paso 04" loading="lazy" decoding="async" draggable="false">
-                <img data-plato-img="4" src="assets/img/NAZH0213.webp" width="600" height="900" alt="Paso 05" loading="lazy" decoding="async" draggable="false">
+                <picture><source type="image/avif" srcset="assets/img/DSC_9992.avif"><img data-plato-img="0" src="assets/img/DSC_9992.webp" width="394" height="590" alt="Paso 01" loading="lazy" decoding="async" draggable="false" class="is-active"></picture>
+                <picture><source type="image/avif" srcset="assets/img/23ea018e-9548-4b25-a894-cfe7a261c156.avif"><img data-plato-img="1" src="assets/img/23ea018e-9548-4b25-a894-cfe7a261c156.webp" width="600" height="900" alt="Paso 02" loading="lazy" decoding="async" draggable="false"></picture>
+                <picture><source type="image/avif" srcset="assets/img/IMG_E4134.avif"><img data-plato-img="2" src="assets/img/IMG_E4134.webp" width="900" height="878" alt="Paso 03" loading="lazy" decoding="async" draggable="false"></picture>
+                <picture><source type="image/avif" srcset="assets/img/DSC_9856.avif"><img data-plato-img="3" src="assets/img/DSC_9856.webp" width="394" height="590" alt="Paso 04" loading="lazy" decoding="async" draggable="false"></picture>
+                <picture><source type="image/avif" srcset="assets/img/NAZH0213.avif"><img data-plato-img="4" src="assets/img/NAZH0213.webp" width="600" height="900" alt="Paso 05" loading="lazy" decoding="async" draggable="false"></picture>
                 <div data-role="plato-sheen" class="plato-sheen"></div>
               </div>
             </div>
@@ -426,7 +426,7 @@
 
         <div class="hist-chapter hist-chapter--chef" data-reveal>
           <figure class="hist-photo" style="--tilt:-1.2deg">
-            <img src="assets/img/2018-03-27-PHOTO-00000647-683x1024.webp" width="600" height="900" alt="Pablo Quiven, chef y fundador, en la cocina de Quiven" loading="lazy" decoding="async" style="filter:saturate(0.85) contrast(1.06)">
+            <picture><source type="image/avif" srcset="assets/img/2018-03-27-PHOTO-00000647-683x1024.avif"><img src="assets/img/2018-03-27-PHOTO-00000647-683x1024.webp" width="600" height="900" alt="Pablo Quiven, chef y fundador, en la cocina de Quiven" loading="lazy" decoding="async" style="filter:saturate(0.85) contrast(1.06)"></picture>
             <div class="hist-sheen"></div>
             <span class="hist-seal qv-mono">01</span>
             <span class="hist-sello" aria-hidden="true">
@@ -453,7 +453,7 @@
 
         <div class="hist-chapter hist-chapter--reverse" data-reveal>
           <figure class="hist-photo" style="--tilt:1deg;border-color:rgba(224,164,95,0.35)">
-            <img src="assets/img/Captura-de-Pantalla-2020-11-18-a-las-16.39.29-1024x784.webp" width="900" height="689" alt="Pablo Quiven y Mariana Trujillo, dueños de Quiven Patagonia House Kitchen" loading="lazy" decoding="async" style="object-position:center 30%">
+            <picture><source type="image/avif" srcset="assets/img/Captura-de-Pantalla-2020-11-18-a-las-16.39.29-1024x784.avif"><img src="assets/img/Captura-de-Pantalla-2020-11-18-a-las-16.39.29-1024x784.webp" width="900" height="689" alt="Pablo Quiven y Mariana Trujillo, dueños de Quiven Patagonia House Kitchen" loading="lazy" decoding="async" style="object-position:center 30%"></picture>
             <div class="hist-sheen"></div>
             <span class="hist-seal qv-mono">02</span>
           </figure>
@@ -466,7 +466,7 @@
 
         <div class="hist-chapter" data-reveal>
           <figure class="hist-photo" style="--tilt:-0.8deg">
-            <img src="assets/img/IMG_0980-1.webp" width="567" height="704" alt="Las manos del chef terminando un plato con pinza" loading="lazy" decoding="async">
+            <picture><source type="image/avif" srcset="assets/img/IMG_0980-1.avif"><img src="assets/img/IMG_0980-1.webp" width="567" height="704" alt="Las manos del chef terminando un plato con pinza" loading="lazy" decoding="async"></picture>
             <div class="hist-sheen"></div>
             <span class="hist-seal qv-mono">03</span>
           </figure>
@@ -511,10 +511,10 @@
             <img src="assets/img/VVCG7562-1-1024x683.webp" width="900" height="600" alt="Mesa comunal con vista a la cocina" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:4/3;object-fit:cover">
           </div>
           <div style="border-radius:50%;overflow:hidden;border:1px solid rgba(224,164,95,0.35);margin-top:clamp(14px,4vw,40px)">
-            <img src="assets/img/2018-03-05-PHOTO-00000185-1024x683.webp" width="1024" height="683" alt="Balcón sobre el lago" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:1/1;object-fit:cover">
+            <picture><source type="image/avif" srcset="assets/img/2018-03-05-PHOTO-00000185-1024x683.avif"><img src="assets/img/2018-03-05-PHOTO-00000185-1024x683.webp" width="1024" height="683" alt="Balcón sobre el lago" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:1/1;object-fit:cover"></picture>
           </div>
           <div style="border:1px solid rgba(242,236,225,0.13);padding:6px;background:#16110e;grid-column:span 2">
-            <img src="assets/img/DSC_9736.webp" width="601" height="900" alt="La vinoteca" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:16/9;object-fit:cover">
+            <picture><source type="image/avif" srcset="assets/img/DSC_9736.avif"><img src="assets/img/DSC_9736.webp" width="601" height="900" alt="La vinoteca" loading="lazy" decoding="async" style="width:100%;height:auto;aspect-ratio:16/9;object-fit:cover"></picture>
           </div>
         </div>
       </div>
@@ -776,11 +776,12 @@
 </div>
 
 <script defer src="js/i18n.js?v=46"></script>
-<script defer src="js/main.js?v=85"></script>
-<!-- Analítica: GoatCounter (gratuito, sin cookies, no vende datos). Crear la
-     cuenta en https://www.goatcounter.com/ y reemplazar CODIGO por el
-     subdominio real que asigna -- sin eso este script no envía nada porque
-     goatcounter.com nunca resuelve ese subdominio. -->
-<script data-goatcounter="https://CODIGO.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script>
+<script defer src="js/main.js?v=86"></script>
+<!-- Analítica: GoatCounter (gratuito, sin cookies, no vende datos). Desactivado
+     hasta tener una cuenta real -- CODIGO es un subdominio inexistente, así que
+     el script se descargaba (~3KB) y fallaba en cada carga sin medir nada.
+     Para activarlo: crear cuenta en https://www.goatcounter.com/, reemplazar
+     CODIGO por el subdominio real, y descomentar. -->
+<!-- <script data-goatcounter="https://CODIGO.goatcounter.com/count" async src="https://gc.zgo.at/count.js"></script> -->
 </body>
 </html>

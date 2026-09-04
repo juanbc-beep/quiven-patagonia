@@ -1152,49 +1152,60 @@ const App = {
   /* ---------- canvas 2D: el fuego (partículas reales, sin dependencias externas) ---------- */
   tres() {
     if (PROPS.efectos3d === false) { this.sinTres(); return; }
-    let intentos = 0;
-    const arrancar = () => {
-      if (this.dead) return;
-      if (!window.Q3D) {
-        if (++intentos > 60) { this.sinTres(); return; }
-        setTimeout(arrancar, 120);
-        return;
-      }
-      try {
-        const enVista = (canvas, cb, umbrales, margen) => {
-          const io = new IntersectionObserver(es => es.forEach(cb), { threshold: umbrales || 0.02, rootMargin: margen || '15% 0px' });
-          io.observe(canvas);
-          this.observadores.push(io);
-        };
-        const cf = q('[data-role="c-fuego"]');
-        // "El Fuego" está bien abajo del fold: ni siquiera se crea el canvas
-        // (ni sus partículas) hasta que la sección está por entrar en pantalla
-        if (cf && !this.gFuego) {
-          cf.style.opacity = this.chico ? '0.45' : '0.62';
-          enVista(cf, e => {
-            if (!this.gFuego && e.isIntersecting) {
-              const densFuego = this.chico ? 0.3 : (this.gamaBaja ? 0.55 : 1);
-              this.gFuego = window.Q3D.fuego(cf, densFuego, this.gamaBaja ? 1 : 1.5);
-            }
-            if (!this.gFuego) return;
-            this.gFuego.setActive(e.isIntersecting);
-            this.gFuego.setIntensity(e.isIntersecting ? 1 : 0.06);
-            // este mismo margen decide cuándo se apaga, no solo cuándo se
-            // prende: con 400px de buffer el canvas (casi del tamaño de la
-            // pantalla, humo + brasas con blending aditivo) seguía dibujando
-            // de fondo mucho después de haber scrolleado a la sección
-            // siguiente -- en un desktop de gama baja eso era, medido, la
-            // mayor parte del costo de CPU de toda la página. La creación
-            // (baja densidad de partículas la primera vez) sigue arrancando
-            // con margen para que no haya un pop-in brusco al entrar.
-          }, 0.02, '60px 0px');
-        }
-      } catch (err) {
-        console.warn('3D no disponible', err);
-        this.sinTres();
-      }
+    const cf = q('[data-role="c-fuego"]');
+    // "El Fuego" está bien abajo del fold: ni siquiera se crea el canvas (ni
+    // sus partículas) hasta que la sección está por entrar en pantalla. Antes,
+    // el script que dibuja esas partículas (quiven-3d.js) se bajaba igual en
+    // TODA carga de página, aunque nadie llegara a scrollear hasta acá -- un
+    // <script defer> de más siempre, solo por si acaso. Ahora ni siquiera se
+    // pide al servidor hasta este mismo cruce de umbral, el mismo que ya
+    // decide cuándo prender el canvas.
+    if (!cf || this._tresArmado) return;
+    this._tresArmado = true;
+    cf.style.opacity = this.chico ? '0.45' : '0.62';
+    let cargaQ3D = null;
+    const cargarQ3D = () => {
+      if (window.Q3D) return Promise.resolve();
+      if (cargaQ3D) return cargaQ3D;
+      cargaQ3D = new Promise((resolve, reject) => {
+        const s = document.createElement('script');
+        s.src = 'js/quiven-3d.js?v=32';
+        s.onload = () => resolve();
+        s.onerror = () => reject(new Error('no cargó quiven-3d.js'));
+        document.head.appendChild(s);
+      });
+      return cargaQ3D;
     };
-    arrancar();
+    const enVista = (canvas, cb, umbrales, margen) => {
+      const io = new IntersectionObserver(es => es.forEach(cb), { threshold: umbrales || 0.02, rootMargin: margen || '15% 0px' });
+      io.observe(canvas);
+      this.observadores.push(io);
+    };
+    enVista(cf, async e => {
+      if (!this.gFuego && e.isIntersecting) {
+        try {
+          await cargarQ3D();
+          if (this.dead) return;
+          const densFuego = this.chico ? 0.3 : (this.gamaBaja ? 0.55 : 1);
+          this.gFuego = window.Q3D.fuego(cf, densFuego, this.gamaBaja ? 1 : 1.5);
+        } catch (err) {
+          console.warn('3D no disponible', err);
+          this.sinTres();
+          return;
+        }
+      }
+      if (!this.gFuego) return;
+      this.gFuego.setActive(e.isIntersecting);
+      this.gFuego.setIntensity(e.isIntersecting ? 1 : 0.06);
+      // este mismo margen decide cuándo se apaga, no solo cuándo se
+      // prende: con 400px de buffer el canvas (casi del tamaño de la
+      // pantalla, humo + brasas con blending aditivo) seguía dibujando
+      // de fondo mucho después de haber scrolleado a la sección
+      // siguiente -- en un desktop de gama baja eso era, medido, la
+      // mayor parte del costo de CPU de toda la página. La creación
+      // (baja densidad de partículas la primera vez) sigue arrancando
+      // con margen para que no haya un pop-in brusco al entrar.
+    }, 0.02, '60px 0px');
   },
 
   sinTres() {

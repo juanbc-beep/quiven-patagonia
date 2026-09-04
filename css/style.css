@@ -113,6 +113,15 @@ body {
 }
 * { box-sizing: border-box; }
 img { display: block; max-width: 100%; }
+/* <picture> es puramente un selector de formato (AVIF/WebP) -- de base es
+   display:inline, así que sin esto metía una caja invisible extra en el
+   flujo normal alrededor de cada <img>. display:contents la saca del
+   todo: el <img> de adentro se comporta exactamente como si el <picture>
+   no existiera (mismo position:absolute, mismo tamaño), cero impacto de
+   layout. Cualquier <picture> que ya declare su propio display/position
+   inline (varios en el sitio) gana igual, por prioridad de estilo en
+   línea; esto es solo la base para los que no dicen nada. */
+picture { display: contents; }
 
 /* ---------- scrollbar propio: el gris default del navegador desentona con
    una página que cuida cada otro detalle visual ---------- */
